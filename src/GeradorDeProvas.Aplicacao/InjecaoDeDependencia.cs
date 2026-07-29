@@ -1,8 +1,8 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using GeradorDeProvas.Aplicacao.Modulos.ModuloDisciplina;
-using GeradorDeProvas.Aplicacao.Modulos.ModuloMateria;
-using GeradorDeProvas.Aplicacao.Modulos.ModuloQuestao;
+using GeradorDeProvas.Aplicacao.ModuloDisciplina;
+using GeradorDeProvas.Aplicacao.ModuloMateria;
+using GeradorDeProvas.Aplicacao.ModuloQuestao;
 
 namespace GeradorDeProvas.Aplicacao;
 

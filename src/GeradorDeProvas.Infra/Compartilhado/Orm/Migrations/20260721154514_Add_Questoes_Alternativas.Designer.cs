@@ -25,7 +25,7 @@ namespace GeradorDeProvas.Infra.Compartilhado.Orm.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("GeradorDeProvas.Dominio.Modulos.ModuloDisciplina.Disciplina", b =>
+            modelBuilder.Entity("GeradorDeProvas.Dominio.ModuloDisciplina.Disciplina", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -48,7 +48,7 @@ namespace GeradorDeProvas.Infra.Compartilhado.Orm.Migrations
                     b.ToTable("TBDisciplina", (string)null);
                 });
 
-            modelBuilder.Entity("GeradorDeProvas.Dominio.Modulos.ModuloMateria.Materia", b =>
+            modelBuilder.Entity("GeradorDeProvas.Dominio.ModuloMateria.Materia", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -79,7 +79,7 @@ namespace GeradorDeProvas.Infra.Compartilhado.Orm.Migrations
                     b.ToTable("TBMateria", (string)null);
                 });
 
-            modelBuilder.Entity("GeradorDeProvas.Dominio.Modulos.ModuloQuestao.Alternativa", b =>
+            modelBuilder.Entity("GeradorDeProvas.Dominio.ModuloQuestao.Alternativa", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -106,7 +106,7 @@ namespace GeradorDeProvas.Infra.Compartilhado.Orm.Migrations
                     b.ToTable("TBAlternativa", (string)null);
                 });
 
-            modelBuilder.Entity("GeradorDeProvas.Dominio.Modulos.ModuloQuestao.Questao", b =>
+            modelBuilder.Entity("GeradorDeProvas.Dominio.ModuloQuestao.Questao", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -327,9 +327,9 @@ namespace GeradorDeProvas.Infra.Compartilhado.Orm.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("GeradorDeProvas.Dominio.Modulos.ModuloMateria.Materia", b =>
+            modelBuilder.Entity("GeradorDeProvas.Dominio.ModuloMateria.Materia", b =>
                 {
-                    b.HasOne("GeradorDeProvas.Dominio.Modulos.ModuloDisciplina.Disciplina", "Disciplina")
+                    b.HasOne("GeradorDeProvas.Dominio.ModuloDisciplina.Disciplina", "Disciplina")
                         .WithMany("Materias")
                         .HasForeignKey("DisciplinaId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -339,9 +339,9 @@ namespace GeradorDeProvas.Infra.Compartilhado.Orm.Migrations
                     b.Navigation("Disciplina");
                 });
 
-            modelBuilder.Entity("GeradorDeProvas.Dominio.Modulos.ModuloQuestao.Alternativa", b =>
+            modelBuilder.Entity("GeradorDeProvas.Dominio.ModuloQuestao.Alternativa", b =>
                 {
-                    b.HasOne("GeradorDeProvas.Dominio.Modulos.ModuloQuestao.Questao", "Questao")
+                    b.HasOne("GeradorDeProvas.Dominio.ModuloQuestao.Questao", "Questao")
                         .WithMany("Alternativas")
                         .HasForeignKey("QuestaoId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -351,9 +351,9 @@ namespace GeradorDeProvas.Infra.Compartilhado.Orm.Migrations
                     b.Navigation("Questao");
                 });
 
-            modelBuilder.Entity("GeradorDeProvas.Dominio.Modulos.ModuloQuestao.Questao", b =>
+            modelBuilder.Entity("GeradorDeProvas.Dominio.ModuloQuestao.Questao", b =>
                 {
-                    b.HasOne("GeradorDeProvas.Dominio.Modulos.ModuloMateria.Materia", "Materia")
+                    b.HasOne("GeradorDeProvas.Dominio.ModuloMateria.Materia", "Materia")
                         .WithMany("Questoes")
                         .HasForeignKey("MateriaId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -414,17 +414,17 @@ namespace GeradorDeProvas.Infra.Compartilhado.Orm.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("GeradorDeProvas.Dominio.Modulos.ModuloDisciplina.Disciplina", b =>
+            modelBuilder.Entity("GeradorDeProvas.Dominio.ModuloDisciplina.Disciplina", b =>
                 {
                     b.Navigation("Materias");
                 });
 
-            modelBuilder.Entity("GeradorDeProvas.Dominio.Modulos.ModuloMateria.Materia", b =>
+            modelBuilder.Entity("GeradorDeProvas.Dominio.ModuloMateria.Materia", b =>
                 {
                     b.Navigation("Questoes");
                 });
 
-            modelBuilder.Entity("GeradorDeProvas.Dominio.Modulos.ModuloQuestao.Questao", b =>
+            modelBuilder.Entity("GeradorDeProvas.Dominio.ModuloQuestao.Questao", b =>
                 {
                     b.Navigation("Alternativas");
                 });

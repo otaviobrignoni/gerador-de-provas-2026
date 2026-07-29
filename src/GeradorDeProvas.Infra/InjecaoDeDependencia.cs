@@ -1,11 +1,11 @@
 using GeradorDeProvas.Infra.Compartilhado.Logging;
 using GeradorDeProvas.Infra.Compartilhado.Orm;
-using GeradorDeProvas.Dominio.Modulos.ModuloDisciplina;
-using GeradorDeProvas.Dominio.Modulos.ModuloMateria;
-using GeradorDeProvas.Dominio.Modulos.ModuloQuestao;
-using GeradorDeProvas.Infra.Modulos.ModuloDisciplina;
-using GeradorDeProvas.Infra.Modulos.ModuloMateria;
-using GeradorDeProvas.Infra.Modulos.ModuloQuestao;
+using GeradorDeProvas.Dominio.ModuloDisciplina;
+using GeradorDeProvas.Dominio.ModuloMateria;
+using GeradorDeProvas.Dominio.ModuloQuestao;
+using GeradorDeProvas.Infra.ModuloDisciplina;
+using GeradorDeProvas.Infra.ModuloMateria;
+using GeradorDeProvas.Infra.ModuloQuestao;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;

@@ -1,8 +1,8 @@
 using System.Reflection;
 using GeradorDeProvas.Dominio.Compartilhado.Identity;
-using GeradorDeProvas.Dominio.Modulos.ModuloDisciplina;
-using GeradorDeProvas.Dominio.Modulos.ModuloMateria;
-using GeradorDeProvas.Dominio.Modulos.ModuloQuestao;
+using GeradorDeProvas.Dominio.ModuloDisciplina;
+using GeradorDeProvas.Dominio.ModuloMateria;
+using GeradorDeProvas.Dominio.ModuloQuestao;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;

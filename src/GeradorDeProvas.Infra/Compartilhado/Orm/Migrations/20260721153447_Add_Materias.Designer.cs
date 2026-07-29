@@ -25,7 +25,7 @@ namespace GeradorDeProvas.Infra.Compartilhado.Orm.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("GeradorDeProvas.Dominio.Modulos.ModuloDisciplina.Disciplina", b =>
+            modelBuilder.Entity("GeradorDeProvas.Dominio.ModuloDisciplina.Disciplina", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -48,7 +48,7 @@ namespace GeradorDeProvas.Infra.Compartilhado.Orm.Migrations
                     b.ToTable("TBDisciplina", (string)null);
                 });
 
-            modelBuilder.Entity("GeradorDeProvas.Dominio.Modulos.ModuloMateria.Materia", b =>
+            modelBuilder.Entity("GeradorDeProvas.Dominio.ModuloMateria.Materia", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -276,9 +276,9 @@ namespace GeradorDeProvas.Infra.Compartilhado.Orm.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("GeradorDeProvas.Dominio.Modulos.ModuloMateria.Materia", b =>
+            modelBuilder.Entity("GeradorDeProvas.Dominio.ModuloMateria.Materia", b =>
                 {
-                    b.HasOne("GeradorDeProvas.Dominio.Modulos.ModuloDisciplina.Disciplina", "Disciplina")
+                    b.HasOne("GeradorDeProvas.Dominio.ModuloDisciplina.Disciplina", "Disciplina")
                         .WithMany("Materias")
                         .HasForeignKey("DisciplinaId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -339,7 +339,7 @@ namespace GeradorDeProvas.Infra.Compartilhado.Orm.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("GeradorDeProvas.Dominio.Modulos.ModuloDisciplina.Disciplina", b =>
+            modelBuilder.Entity("GeradorDeProvas.Dominio.ModuloDisciplina.Disciplina", b =>
                 {
                     b.Navigation("Materias");
                 });
