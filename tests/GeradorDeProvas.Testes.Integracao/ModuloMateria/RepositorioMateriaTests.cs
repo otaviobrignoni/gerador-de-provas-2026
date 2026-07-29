@@ -11,12 +11,15 @@ public sealed class RepositorioMateriaTests : RepositorioBaseTests
     [TestMethod]
     public void CadastrarESelecionarPorId_CarregaRegistro_ComRelacionamentos()
     {
+        // Arrange
         var (disciplina, materia) = CriarMateria(1, false);
 
+        // Act
         repositorioMateria.Cadastrar(materia);
         dbContext.ChangeTracker.Clear();
         var materiaSelecionada = repositorioMateria.SelecionarPorId(materia.Id);
 
+        // Assert
         Assert.IsNotNull(materiaSelecionada);
         Assert.AreEqual(materia.Nome, materiaSelecionada.Nome);
         Assert.AreEqual(disciplina.Id, materiaSelecionada.Disciplina.Id);
@@ -25,13 +28,16 @@ public sealed class RepositorioMateriaTests : RepositorioBaseTests
     [TestMethod]
     public void Editar_AtualizaRegistroExistente()
     {
+        // Arrange
         var (_, materia) = CriarMateria(1);
         var (disciplinaAtualizada, materiaAtualizada) = CriarMateria(2, false);
 
+        // Act
         bool conseguiuEditar = repositorioMateria.Editar(materia.Id, materiaAtualizada);
         dbContext.ChangeTracker.Clear();
         var materiaSelecionada = repositorioMateria.SelecionarPorId(materia.Id);
 
+        // Assert
         Assert.IsTrue(conseguiuEditar);
         Assert.IsNotNull(materiaSelecionada);
         Assert.AreEqual(materiaAtualizada.Nome, materiaSelecionada.Nome);
@@ -42,12 +48,15 @@ public sealed class RepositorioMateriaTests : RepositorioBaseTests
     [TestMethod]
     public void Excluir_RemoveRegistroExistente()
     {
+        // Arrange
         var (_, materia) = CriarMateria(1);
 
+        // Act
         bool conseguiuExcluir = repositorioMateria.Excluir(materia.Id);
         dbContext.ChangeTracker.Clear();
         var materiaSelecionada = repositorioMateria.SelecionarPorId(materia.Id);
 
+        // Assert
         Assert.IsTrue(conseguiuExcluir);
         Assert.IsNull(materiaSelecionada);
     }
@@ -55,13 +64,18 @@ public sealed class RepositorioMateriaTests : RepositorioBaseTests
     [TestMethod]
     public void SelecionarTodos_CarregaRegistros_ComRelacionamentos()
     {
+        // Arrange
         var materias = Enumerable
             .Range(1, 3)
             .Select(i => CriarMateria(i).materia)
             .ToList();
 
         dbContext.ChangeTracker.Clear();
+
+        // Act
         var materiasSelecionadas = repositorioMateria.SelecionarTodos();
+
+        // Assert
         var materiasIds = materias.Select(m => m.Id).ToList();
         var materiasSelecionadasIds = materiasSelecionadas.Select(m => m.Id).ToList();
 

@@ -11,13 +11,16 @@ public sealed class ProvaTests
     [TestMethod]
     public void Validar_SemTitulo_DeveRetornar_ErroCorrespondente()
     {
+        // Arrange
         var disciplina = new Disciplina("Matemática");
         var materia = new Materia("Álgebra", 8, disciplina);
 
         var prova = new Prova(string.Empty, disciplina, materia, 8, 1, false);
 
+        // Act
         var erros = prova.Validar();
 
+        // Assert
         Assert.HasCount(1, erros);
         Assert.AreEqual("O campo \"Título\" deve ser conter entre 2 e 100 caracteres.", erros.First());
     }
@@ -25,12 +28,15 @@ public sealed class ProvaTests
     [TestMethod]
     public void Validar_SemDisciplina_DeveRetornar_ErroCorrespondente()
     {
+        // Arrange
         var materia = new Materia("Álgebra", 8, null!);
 
         var prova = new Prova("Prova de Álgebra 8a Serie", null!, materia, 8, 1, false);
 
+        // Act
         var erros = prova.Validar();
 
+        // Assert
         Assert.HasCount(1, erros);
         Assert.AreEqual("O campo \"Disciplina\" deve ser preenchido.", erros.First());
     }
@@ -38,13 +44,16 @@ public sealed class ProvaTests
     [TestMethod]
     public void Validar_ComSerieZeroOuAbaixo_DeveRetornar_ErroCorrespondente()
     {
+        // Arrange
         var disciplina = new Disciplina("Matemática");
         var materia = new Materia("Álgebra", 0, disciplina);
 
         var prova = new Prova("Prova de Álgebra", disciplina, materia, 0, 1, false);
 
+        // Act
         var erros = prova.Validar();
 
+        // Assert
         Assert.HasCount(1, erros);
         Assert.AreEqual("O campo \"Série\" deve ser maior que zero.", erros.First());
     }
@@ -52,13 +61,16 @@ public sealed class ProvaTests
     [TestMethod]
     public void Validar_ComSerieEMateria_Diferentes_DeveRetornar_ErroCorrespondente()
     {
+        // Arrange
         var disciplina = new Disciplina("Matemática");
         var materia = new Materia("Álgebra", 8, disciplina);
 
         var prova = new Prova("Prova de Álgebra", disciplina, materia, 5, 1, false);
 
+        // Act
         var erros = prova.Validar();
 
+        // Assert
         Assert.HasCount(1, erros);
         Assert.AreEqual("O campo \"Série\" precisa alinhar com a série da \"Matéria\".", erros.First());
     }
@@ -66,13 +78,16 @@ public sealed class ProvaTests
     [TestMethod]
     public void Validar_RecuperacaoComMateria_DeveRetornar_ErroCorrespondente()
     {
+        // Arrange
         var disciplina = new Disciplina("Matemática");
         var materia = new Materia("Álgebra", 8, disciplina);
 
         var prova = new Prova("Prova de Álgebra", disciplina, materia, 8, 1, true);
 
+        // Act
         var erros = prova.Validar();
 
+        // Assert
         Assert.HasCount(1, erros);
         Assert.AreEqual("O campo \"Matéria\" não pode ser prenchido em uma prova de recuperação.", erros.First());
     }
@@ -80,11 +95,14 @@ public sealed class ProvaTests
     [TestMethod]
     public void Validar_ProvaComumSemMateria_DeveRetornar_ErroCorrespondente()
     {
+        // Arrange
         var disciplina = new Disciplina("Matemática");
         var prova = new Prova("Prova de Matemática", disciplina, null, 8, 1, false);
 
+        // Act
         var erros = prova.Validar();
 
+        // Assert
         Assert.HasCount(1, erros);
         Assert.AreEqual("O campo \"Matéria\" deve ser preenchido.", erros.First());
     }
@@ -92,24 +110,30 @@ public sealed class ProvaTests
     [TestMethod]
     public void Validar_ProvaRecuperacaoSemMateria_NaoDeveRetornarErros()
     {
+        // Arrange
         var disciplina = new Disciplina("Matemática");
         var prova = new Prova("Recuperação de Matemática", disciplina, null, 8, 1, true);
 
+        // Act
         var erros = prova.Validar();
 
+        // Assert
         Assert.IsEmpty(erros);
     }
 
     [TestMethod]
     public void Validar_QuantidadeQuestoesAbaixoDeUm_DeveRetornar_ErroCorrespondente()
     {
+        // Arrange
         var disciplina = new Disciplina("Matemática");
         var materia = new Materia("Álgebra", 8, disciplina);
 
         var prova = new Prova("Prova de Álgebra", disciplina, materia, 8, 0, false);
 
+        // Act
         var erros = prova.Validar();
 
+        // Assert
         Assert.HasCount(1, erros);
         Assert.AreEqual("O campo \"Quantidade de Questões\" não pode ser zero ou negativo.", erros.First());
     }
@@ -117,6 +141,7 @@ public sealed class ProvaTests
     [TestMethod]
     public void Validar_MateriaFora_DaDisciplina_DeveRetornar_ErroCorrespondente()
     {
+        // Arrange
         var disciplina = new Disciplina("Matemática");
 
         var disciplina2 = new Disciplina("Geografia");
@@ -124,8 +149,10 @@ public sealed class ProvaTests
 
         var prova = new Prova("Prova de Álgebra", disciplina, materia2, 8, 3, false);
 
+        // Act
         var erros = prova.Validar();
 
+        // Assert
         Assert.HasCount(1, erros);
         Assert.AreEqual("O valor do campo \"Matéria\" deve pertencer à \"Disciplina\" selecionada.", erros.First());
     }
@@ -133,6 +160,7 @@ public sealed class ProvaTests
     [TestMethod]
     public void Atualizar_AlteraConfiguracaoELimpaQuestoes()
     {
+        // Arrange
         var disciplina = new Disciplina("Matemática");
         var materia = new Materia("Álgebra", 8, disciplina);
 
@@ -140,8 +168,10 @@ public sealed class ProvaTests
 
         var disciplina2 = new Disciplina("Geografia");
 
+        // Act
         prova.Atualizar(new Prova("Prova de Geografia", disciplina2, null, 6, 3, true));
 
+        // Assert
         Assert.AreEqual("Prova de Geografia", prova.Titulo);
         Assert.AreEqual(6, prova.Serie);
         Assert.AreEqual(3, prova.QuantidadeQuestoes);
@@ -153,6 +183,7 @@ public sealed class ProvaTests
     [TestMethod]
     public void SortearQuestoes_DeveSelecionar_QuantidadeInformada_SemRepetir()
     {
+        // Arrange
         var disciplina = new Disciplina("Matemática");
         var materia = new Materia("Álgebra", 8, disciplina);
 
@@ -163,8 +194,10 @@ public sealed class ProvaTests
             .Select(indice => new Questao($"Questão {indice}", materia, []))
         ];
 
+        // Act
         var erros = prova.SortearQuestoes(questoesDisponiveis, 1);
 
+        // Assert
         Assert.IsEmpty(erros);
         Assert.HasCount(5, prova.Questoes);
         Assert.HasCount(5, prova.Questoes.Select(q => q.Id).Distinct());
@@ -174,12 +207,15 @@ public sealed class ProvaTests
     [TestMethod]
     public void SortearQuestoes_ComQuantidadeAbaixoDeUm_DeveRetornar_ErroCorrespondente()
     {
+        // Arrange
         var disciplina = new Disciplina("Matemática");
         var materia = new Materia("Álgebra", 8, disciplina);
         var prova = new Prova("Prova de Álgebra", disciplina, materia, 8, 0, false);
 
+        // Act
         var erros = prova.SortearQuestoes([]);
 
+        // Assert
         Assert.HasCount(1, erros);
         Assert.AreEqual("A quantidade de questões deve ser maior que zero.", erros.First());
     }
@@ -187,6 +223,7 @@ public sealed class ProvaTests
     [TestMethod]
     public void SortearQuestoes_ComQuantidadeMaiorQueDisponivel_DeveRetornar_ErroCorrespondente()
     {
+        // Arrange
         var disciplina = new Disciplina("Matemática");
         var materia = new Materia("Álgebra", 8, disciplina);
         var prova = new Prova("Prova de Álgebra", disciplina, materia, 8, 3, false);
@@ -196,8 +233,10 @@ public sealed class ProvaTests
             new Questao("Quanto é 3 + 3?", materia, [])
         ];
 
+        // Act
         var erros = prova.SortearQuestoes(questoesDisponiveis);
 
+        // Assert
         Assert.HasCount(1, erros);
         Assert.AreEqual("A quantidade de questões informada é maior que a quantidade disponível.", erros.First());
     }

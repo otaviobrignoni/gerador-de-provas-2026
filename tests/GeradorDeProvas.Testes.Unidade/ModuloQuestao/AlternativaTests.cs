@@ -10,7 +10,7 @@ public sealed class AlternativaTests
     [TestMethod]
     public void Validar_SemTexto_DeveRetornar_ErroCorrespondente()
     {
-        // Arranjo
+        // Arrange
         var materia = new Materia("Álgebra", 8, new Disciplina("Matemática"));
         var alternativa = new Alternativa(string.Empty, false);
 
@@ -20,10 +20,10 @@ public sealed class AlternativaTests
             [alternativa, new Alternativa("4", true)]
         );
 
-        // Ação
+        // Act
         List<string> erros = alternativa.Validar();
 
-        // Asserção
+        // Assert
         Assert.HasCount(1, erros);
         Assert.AreEqual("O campo \"Texto\" da alternativa deve ser preenchido e conter no máximo 1000 caracteres.", erros.First());
     }
@@ -31,13 +31,13 @@ public sealed class AlternativaTests
     [TestMethod]
     public void Validar_SemQuestao_DeveRetornar_ErroCorrespondente()
     {
-        // Arranjo
+        // Arrange
         var alternativa = new Alternativa("4", true);
 
-        // Ação
+        // Act
         List<string> erros = alternativa.Validar();
 
-        // Asserção
+        // Assert
         Assert.HasCount(1, erros);
         Assert.AreEqual("A alternativa deve estar vinculada a uma questão.", erros.First());
     }
@@ -45,14 +45,14 @@ public sealed class AlternativaTests
     [TestMethod]
     public void Atualizar_DeveAtualizar_TextoECorreta()
     {
-        // Arranjo
+        // Arrange
         var alternativa = new Alternativa("3", false);
         var alternativaAtualizada = new Alternativa("4", true);
 
-        // Ação
+        // Act
         alternativa.Atualizar(alternativaAtualizada);
 
-        // Asserção
+        // Assert
         Assert.AreEqual("4", alternativa.Texto);
         Assert.IsTrue(alternativa.Correta);
     }

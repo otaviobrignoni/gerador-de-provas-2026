@@ -12,13 +12,16 @@ public sealed class RepositorioQuestaoTests : RepositorioBaseTests
     [TestMethod]
     public void CadastrarESelecionarPorId_CarregaRegistro_ComRelacionamentos()
     {
+        // Arrange
         var (_, materia, questao) = CriarQuestao(1, false);
 
+        // Act
         repositorioQuestao.Cadastrar(questao);
         dbContext.ChangeTracker.Clear();
 
         var questaoSelecionada = repositorioQuestao.SelecionarPorId(questao.Id);
 
+        // Assert
         Assert.IsNotNull(questaoSelecionada);
         Assert.AreEqual(questao.Enunciado, questaoSelecionada.Enunciado);
         Assert.AreEqual(materia.Id, questaoSelecionada.Materia.Id);
@@ -28,14 +31,17 @@ public sealed class RepositorioQuestaoTests : RepositorioBaseTests
     [TestMethod]
     public void Editar_AtualizaRegistroExistente()
     {
+        // Arrange
         var (_, _, questao) = CriarQuestao(1);
         var (_, materiaAtualizada, questaoAtualizada) = CriarQuestao(2, false);
 
+        // Act
         bool conseguiuEditar = repositorioQuestao.Editar(questao.Id, questaoAtualizada);
         dbContext.ChangeTracker.Clear();
 
         var questaoSelecionada = repositorioQuestao.SelecionarPorId(questao.Id);
 
+        // Assert
         Assert.IsTrue(conseguiuEditar);
         Assert.IsNotNull(questaoSelecionada);
         Assert.AreEqual(questaoAtualizada.Enunciado, questaoSelecionada.Enunciado);
@@ -46,12 +52,15 @@ public sealed class RepositorioQuestaoTests : RepositorioBaseTests
     [TestMethod]
     public void Excluir_RemoveRegistroExistente()
     {
+        // Arrange
         var (_, _, questao) = CriarQuestao(1);
         dbContext.ChangeTracker.Clear();
 
+        // Act
         bool conseguiuExcluir = repositorioQuestao.Excluir(questao.Id);
         dbContext.ChangeTracker.Clear();
 
+        // Assert
         Assert.IsTrue(conseguiuExcluir);
         Assert.IsNull(repositorioQuestao.SelecionarPorId(questao.Id));
     }
@@ -59,13 +68,18 @@ public sealed class RepositorioQuestaoTests : RepositorioBaseTests
     [TestMethod]
     public void SelecionarTodos_CarregaRegistros_ComRelacionamentos()
     {
+        // Arrange
         var questoes = Enumerable
             .Range(1, 3)
             .Select(i => CriarQuestao(i))
             .ToList();
 
         dbContext.ChangeTracker.Clear();
+
+        // Act
         var questoesSelecionadas = repositorioQuestao.SelecionarTodos();
+
+        // Assert
         var questoesIds = questoes.Select(c => c.questao.Id).ToList();
         var materiasIds = questoes.Select(c => c.materia.Id).ToList();
         var questoesSelecionadasIds = questoesSelecionadas.Select(q => q.Id).ToList();

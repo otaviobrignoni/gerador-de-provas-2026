@@ -10,13 +10,16 @@ public sealed class RepositorioDisciplinaTests : RepositorioBaseTests
     [TestMethod]
     public void CadastrarESelecionarPorId_CarregaRegistro()
     {
+        // Arrange
         var disciplina = CriarDisciplina(1, false);
 
+        // Act
         repositorioDisciplina.Cadastrar(disciplina);
         dbContext.ChangeTracker.Clear();
 
         var disciplinaSelecionada = repositorioDisciplina.SelecionarPorId(disciplina.Id);
 
+        // Assert
         Assert.IsNotNull(disciplinaSelecionada);
         Assert.AreEqual(disciplina.Nome, disciplinaSelecionada.Nome);
     }
@@ -24,13 +27,16 @@ public sealed class RepositorioDisciplinaTests : RepositorioBaseTests
     [TestMethod]
     public void Editar_AtualizaRegistroExistente()
     {
+        // Arrange
         var disciplina = CriarDisciplina(1);
         var disciplinaAtualizada = CriarDisciplina(2, false);
 
+        // Act
         bool conseguiuEditar = repositorioDisciplina.Editar(disciplina.Id, disciplinaAtualizada);
         dbContext.ChangeTracker.Clear();
         var disciplinaSelecionada = repositorioDisciplina.SelecionarPorId(disciplina.Id);
 
+        // Assert
         Assert.IsTrue(conseguiuEditar);
         Assert.IsNotNull(disciplinaSelecionada);
         Assert.AreEqual(disciplinaAtualizada.Nome, disciplinaSelecionada.Nome);
@@ -39,12 +45,15 @@ public sealed class RepositorioDisciplinaTests : RepositorioBaseTests
     [TestMethod]
     public void Excluir_RemoveRegistroExistente()
     {
+        // Arrange
         var disciplina = CriarDisciplina(1);
 
+        // Act
         bool conseguiuExcluir = repositorioDisciplina.Excluir(disciplina.Id);
         dbContext.ChangeTracker.Clear();
         var disciplinaSelecionada = repositorioDisciplina.SelecionarPorId(disciplina.Id);
 
+        // Assert
         Assert.IsTrue(conseguiuExcluir);
         Assert.IsNull(disciplinaSelecionada);
     }
@@ -52,6 +61,7 @@ public sealed class RepositorioDisciplinaTests : RepositorioBaseTests
     [TestMethod]
     public void SelecionarTodos_CarregaRegistros()
     {
+        // Arrange
         var disciplinas = Enumerable
             .Range(1, 3)
             .Select(i => CriarDisciplina(i))
@@ -59,7 +69,10 @@ public sealed class RepositorioDisciplinaTests : RepositorioBaseTests
 
         dbContext.ChangeTracker.Clear();
 
+        // Act
         var disciplinasSelecionadas = repositorioDisciplina.SelecionarTodos();
+
+        // Assert
         var disciplinasIds = disciplinas.Select(d => d.Id).ToList();
         var disciplinasSelecionadasIds = disciplinasSelecionadas.Select(d => d.Id).ToList();
 

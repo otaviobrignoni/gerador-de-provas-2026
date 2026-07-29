@@ -9,15 +9,15 @@ public sealed class MateriaTests
     [TestMethod]
     public void Validar_SemNome_DeveRetornar_ErroCorrespondente()
     {
-        // Arranjo
+        // Arrange
         var disciplina = new Disciplina("Matemática");
 
         var materia = new Materia(string.Empty, 5, disciplina);
 
-        // Ação
+        // Act
         var erros = materia.Validar();
 
-        // Asserção
+        // Assert
         Assert.HasCount(1, erros);
         Assert.AreEqual("O campo \"Nome\" deve conter entre 2 e 100 caracteres.", erros.First());
     }
@@ -25,15 +25,15 @@ public sealed class MateriaTests
     [TestMethod]
     public void Validar_SemSerie_DeveRetornar_ErroCorrespondente()
     {
-        // Arranjo
+        // Arrange
         var disciplina = new Disciplina("Matemática");
 
         var materia = new Materia("Quatro Operações", 0, disciplina);
 
-        // Ação
+        // Act
         var erros = materia.Validar();
 
-        // Asserção
+        // Assert
         Assert.HasCount(1, erros);
         Assert.AreEqual("O campo \"Série\" deve ser preenchido.", erros.First());
     }
@@ -41,15 +41,15 @@ public sealed class MateriaTests
     [TestMethod]
     public void Validar_SemDisciplina_DeveRetornar_ErroCorrespondente()
     {
-        // Arranjo
+        // Arrange
         Disciplina? disciplina = null;
 
         var materia = new Materia("Quatro Operações", 2, disciplina!);
 
-        // Ação
+        // Act
         var erros = materia.Validar();
 
-        // Asserção
+        // Assert
         Assert.HasCount(1, erros);
         Assert.AreEqual("O campo \"Disciplina\" deve ser preenchido.", erros.First());
     }
@@ -57,17 +57,17 @@ public sealed class MateriaTests
     [TestMethod]
     public void Atualizar_DeveAtualizar_NomeSerieEDisciplina()
     {
-        // Arranjo
+        // Arrange
         var disciplina = new Disciplina("Matemática");
         var materia = new Materia("Quatro Operações", 2, disciplina);
 
         var disciplinaAtualizada = new Disciplina("História");
         var materiaAtualizada = new Materia("História do Brasil", 5, disciplinaAtualizada);
 
-        // Ação
+        // Act
         materia.Atualizar(materiaAtualizada);
 
-        // Asserção
+        // Assert
         Assert.AreEqual("História do Brasil", materia.Nome);
         Assert.AreEqual(5, materia.Serie);
         Assert.AreSame(disciplinaAtualizada, materia.Disciplina);

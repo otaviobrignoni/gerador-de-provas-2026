@@ -13,12 +13,15 @@ public sealed class RepositorioProvaTests : RepositorioBaseTests
     [TestMethod]
     public void CadastrarESelecionarPorId_CarregaRelacionamentosDaProva()
     {
+        // Arrange
         var (disciplina, materia, questoes, prova) = CriarProva(1, false);
 
+        // Act
         repositorioProva.Cadastrar(prova);
         dbContext.ChangeTracker.Clear();
         var provaSelecionada = repositorioProva.SelecionarPorId(prova.Id);
 
+        // Assert
         Assert.IsNotNull(provaSelecionada);
         Assert.AreEqual(prova.Titulo, provaSelecionada.Titulo);
         Assert.AreEqual(disciplina.Id, provaSelecionada.Disciplina.Id);
@@ -30,13 +33,16 @@ public sealed class RepositorioProvaTests : RepositorioBaseTests
     [TestMethod]
     public void Editar_AtualizaProvaExistente()
     {
+        // Arrange
         var (_, _, _, prova) = CriarProva(1);
         var (_, _, _, provaAtualizada) = CriarProva(2, false, true);
 
+        // Act
         bool conseguiuEditar = repositorioProva.Editar(prova.Id, provaAtualizada);
         dbContext.ChangeTracker.Clear();
         var provaSelecionada = repositorioProva.SelecionarPorId(prova.Id);
 
+        // Assert
         Assert.IsTrue(conseguiuEditar);
         Assert.IsNotNull(provaSelecionada);
         Assert.AreEqual(provaAtualizada.Titulo, provaSelecionada.Titulo);
@@ -47,12 +53,15 @@ public sealed class RepositorioProvaTests : RepositorioBaseTests
     [TestMethod]
     public void Excluir_RemoveProvaExistente()
     {
+        // Arrange
         var (_, _, _, prova) = CriarProva(1);
 
+        // Act
         bool conseguiuExcluir = repositorioProva.Excluir(prova.Id);
         dbContext.ChangeTracker.Clear();
         var provaSelecionada = repositorioProva.SelecionarPorId(prova.Id);
 
+        // Assert
         Assert.IsTrue(conseguiuExcluir);
         Assert.IsNull(provaSelecionada);
     }
@@ -60,11 +69,15 @@ public sealed class RepositorioProvaTests : RepositorioBaseTests
     [TestMethod]
     public void SelecionarTodos_RetornaProvasComRelacionamentos()
     {
+        // Arrange
         var (disciplina, materia, questoes, _) = CriarProva(1);
 
         dbContext.ChangeTracker.Clear();
+
+        // Act
         var provas = repositorioProva.SelecionarTodos();
 
+        // Assert
         Assert.HasCount(1, provas);
         Assert.AreEqual(disciplina.Nome, provas.First().Disciplina.Nome);
         Assert.AreEqual(materia!.Nome, provas.First().Materia!.Nome);
