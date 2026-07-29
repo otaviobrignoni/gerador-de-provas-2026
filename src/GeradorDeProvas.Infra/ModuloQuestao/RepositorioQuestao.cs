@@ -18,9 +18,18 @@ public sealed class RepositorioQuestao(
 
     public override List<Questao> SelecionarTodos()
     {
-        return registros
+        return [.. registros
             .Include(q => q.Materia)
             .Include(q => q.Alternativas)
-            .ToList();
+        ];
+    }
+
+    public override List<Questao> Filtrar(Func<Questao, bool> filtro)
+    {
+        return [.. registros
+            .Include(q => q.Materia)
+            .Include(q => q.Alternativas)
+            .Where(filtro)
+        ];
     }
 }
