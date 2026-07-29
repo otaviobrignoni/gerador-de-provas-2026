@@ -11,15 +11,7 @@ public sealed class RepositorioMateriaTests : RepositorioBaseTests
     [TestMethod]
     public void CadastrarESelecionarPorId_CarregaRegistro_ComRelacionamentos()
     {
-        var disciplina = Builder<Disciplina>
-            .CreateNew()
-            .With(d => d.UserId = Guid.Empty)
-            .Persist();
-        var materia = Builder<Materia>
-            .CreateNew()
-            .With(m => m.Disciplina = disciplina)
-            .With(m => m.UserId = Guid.Empty)
-            .Build();
+        var (disciplina, materia) = CriarMateria(1, false);
 
         repositorioMateria.Cadastrar(materia);
         dbContext.ChangeTracker.Clear();
@@ -27,32 +19,14 @@ public sealed class RepositorioMateriaTests : RepositorioBaseTests
 
         Assert.IsNotNull(materiaSelecionada);
         Assert.AreEqual(materia.Nome, materiaSelecionada.Nome);
+        Assert.AreEqual(disciplina.Id, materiaSelecionada.Disciplina.Id);
     }
 
     [TestMethod]
     public void Editar_AtualizaRegistroExistente()
     {
-        var disciplina = Builder<Disciplina>
-            .CreateNew()
-            .With(d => d.UserId = Guid.Empty)
-            .Persist();
-        var materia = Builder<Materia>
-            .CreateNew()
-            .With(m => m.Disciplina = disciplina)
-            .With(m => m.UserId = Guid.Empty)
-            .Persist();
-        var disciplinaAtualizada = Builder<Disciplina>
-            .CreateNew()
-            .With(d => d.UserId = Guid.Empty)
-            .Persist();
-        string novoNome = "NomeAtualizado";
-        var materiaAtualizada = Builder<Materia>
-            .CreateNew()
-            .With(m => m.Nome = novoNome)
-            .With(m => m.Serie = 2)
-            .With(m => m.Disciplina = disciplinaAtualizada)
-            .With(m => m.UserId = Guid.Empty)
-            .Build();
+        var (_, materia) = CriarMateria(1);
+        var (disciplinaAtualizada, materiaAtualizada) = CriarMateria(2, false);
 
         bool conseguiuEditar = repositorioMateria.Editar(materia.Id, materiaAtualizada);
         dbContext.ChangeTracker.Clear();
@@ -60,23 +34,15 @@ public sealed class RepositorioMateriaTests : RepositorioBaseTests
 
         Assert.IsTrue(conseguiuEditar);
         Assert.IsNotNull(materiaSelecionada);
-        Assert.AreEqual(novoNome, materiaSelecionada.Nome);
-        Assert.AreEqual(2, materiaSelecionada.Serie);
-        Assert.AreEqual(disciplinaAtualizada.Nome, materiaSelecionada.Disciplina.Nome);
+        Assert.AreEqual(materiaAtualizada.Nome, materiaSelecionada.Nome);
+        Assert.AreEqual(materiaAtualizada.Serie, materiaSelecionada.Serie);
+        Assert.AreEqual(disciplinaAtualizada.Id, materiaSelecionada.Disciplina.Id);
     }
 
     [TestMethod]
     public void Excluir_RemoveRegistroExistente()
     {
-        var disciplina = Builder<Disciplina>
-            .CreateNew()
-            .With(d => d.UserId = Guid.Empty)
-            .Persist();
-        var materia = Builder<Materia>
-            .CreateNew()
-            .With(m => m.Disciplina = disciplina)
-            .With(m => m.UserId = Guid.Empty)
-            .Persist();
+        var (_, materia) = CriarMateria(1);
 
         bool conseguiuExcluir = repositorioMateria.Excluir(materia.Id);
         dbContext.ChangeTracker.Clear();
@@ -89,20 +55,41 @@ public sealed class RepositorioMateriaTests : RepositorioBaseTests
     [TestMethod]
     public void SelecionarTodos_CarregaRegistros_ComRelacionamentos()
     {
-        var disciplina = Builder<Disciplina>
-            .CreateNew()
-            .With(d => d.UserId = Guid.Empty)
-            .Persist();
-        var materias = Builder<Materia>
-            .CreateListOfSize(3)
-            .All()
-            .With(m => m.Disciplina = disciplina)
-            .With(m => m.UserId = Guid.Empty)
-            .Persist();
+        var materias = Enumerable
+            .Range(1, 3)
+            .Select(i => CriarMateria(i).materia)
+            .ToList();
 
+        dbContext.ChangeTracker.Clear();
         var materiasSelecionadas = repositorioMateria.SelecionarTodos();
+        var materiasIds = materias.Select(m => m.Id).ToList();
+        var materiasSelecionadasIds = materiasSelecionadas.Select(m => m.Id).ToList();
 
         Assert.HasCount(3, materiasSelecionadas);
-        CollectionAssert.AreEquivalent(materias.ToList(), materiasSelecionadas);
+        CollectionAssert.AreEquivalent(materiasIds, materiasSelecionadasIds);
+        Assert.IsTrue(materiasSelecionadas.All(m => m.Disciplina is not null));
+    }
+
+    private (Disciplina disciplina, Materia materia) CriarMateria(int indice, bool persistirMateria = true)
+    {
+        if (indice <= 0)
+            throw new ArgumentOutOfRangeException(nameof(indice), "O índice deve ser maior que zero.");
+
+        var disciplina = Builder<Disciplina>
+            .CreateNew()
+            .With(d => d.Nome = $"Disciplina{indice}")
+            .With(d => d.UserId = Guid.Empty)
+            .Persist();
+        var materia = Builder<Materia>
+            .CreateNew()
+            .With(m => m.Nome = $"Materia{indice}")
+            .With(m => m.Serie = indice)
+            .With(m => m.Disciplina = disciplina)
+            .With(m => m.UserId = Guid.Empty)
+            .Build();
+        if (persistirMateria)
+            repositorioMateria.Cadastrar(materia);
+
+        return (disciplina, materia);
     }
 }

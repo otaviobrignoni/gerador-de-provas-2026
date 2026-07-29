@@ -10,10 +10,7 @@ public sealed class RepositorioDisciplinaTests : RepositorioBaseTests
     [TestMethod]
     public void CadastrarESelecionarPorId_CarregaRegistro()
     {
-        var disciplina = Builder<Disciplina>
-            .CreateNew()
-            .With(d => d.UserId = Guid.Empty)
-            .Build();
+        var disciplina = CriarDisciplina(1, false);
 
         repositorioDisciplina.Cadastrar(disciplina);
         dbContext.ChangeTracker.Clear();
@@ -27,16 +24,8 @@ public sealed class RepositorioDisciplinaTests : RepositorioBaseTests
     [TestMethod]
     public void Editar_AtualizaRegistroExistente()
     {
-        var disciplina = Builder<Disciplina>
-            .CreateNew()
-            .With(d => d.UserId = Guid.Empty)
-            .Persist();
-        string novoNome = "NomeAtualizado";
-        var disciplinaAtualizada = Builder<Disciplina>
-            .CreateNew()
-            .With(d => d.Nome = novoNome)
-            .With(d => d.UserId = Guid.Empty)
-            .Build();
+        var disciplina = CriarDisciplina(1);
+        var disciplinaAtualizada = CriarDisciplina(2, false);
 
         bool conseguiuEditar = repositorioDisciplina.Editar(disciplina.Id, disciplinaAtualizada);
         dbContext.ChangeTracker.Clear();
@@ -44,16 +33,13 @@ public sealed class RepositorioDisciplinaTests : RepositorioBaseTests
 
         Assert.IsTrue(conseguiuEditar);
         Assert.IsNotNull(disciplinaSelecionada);
-        Assert.AreEqual(novoNome, disciplinaSelecionada.Nome);
+        Assert.AreEqual(disciplinaAtualizada.Nome, disciplinaSelecionada.Nome);
     }
 
     [TestMethod]
     public void Excluir_RemoveRegistroExistente()
     {
-        var disciplina = Builder<Disciplina>
-            .CreateNew()
-            .With(d => d.UserId = Guid.Empty)
-            .Persist();
+        var disciplina = CriarDisciplina(1);
 
         bool conseguiuExcluir = repositorioDisciplina.Excluir(disciplina.Id);
         dbContext.ChangeTracker.Clear();
@@ -66,16 +52,34 @@ public sealed class RepositorioDisciplinaTests : RepositorioBaseTests
     [TestMethod]
     public void SelecionarTodos_CarregaRegistros()
     {
-        var disciplina = Builder<Disciplina>
-            .CreateListOfSize(3)
-            .All()
-            .With(d => d.UserId = Guid.Empty)
-            .Persist();
+        var disciplinas = Enumerable
+            .Range(1, 3)
+            .Select(i => CriarDisciplina(i))
+            .ToList();
 
         dbContext.ChangeTracker.Clear();
 
-        var disciplinas = repositorioDisciplina.SelecionarTodos();
+        var disciplinasSelecionadas = repositorioDisciplina.SelecionarTodos();
+        var disciplinasIds = disciplinas.Select(d => d.Id).ToList();
+        var disciplinasSelecionadasIds = disciplinasSelecionadas.Select(d => d.Id).ToList();
 
-        Assert.HasCount(3, disciplinas);
+        Assert.HasCount(3, disciplinasSelecionadas);
+        CollectionAssert.AreEquivalent(disciplinasIds, disciplinasSelecionadasIds);
+    }
+
+    private Disciplina CriarDisciplina(int indice, bool persistir = true)
+    {
+        if (indice <= 0)
+            throw new ArgumentOutOfRangeException(nameof(indice), "O índice deve ser maior que zero.");
+
+        var disciplina = Builder<Disciplina>
+            .CreateNew()
+            .With(d => d.Nome = $"Disciplina{indice}")
+            .With(d => d.UserId = Guid.Empty)
+            .Build();
+        if (persistir)
+            repositorioDisciplina.Cadastrar(disciplina);
+
+        return disciplina;
     }
 }

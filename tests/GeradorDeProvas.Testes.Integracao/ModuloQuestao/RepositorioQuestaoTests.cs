@@ -12,22 +12,7 @@ public sealed class RepositorioQuestaoTests : RepositorioBaseTests
     [TestMethod]
     public void CadastrarESelecionarPorId_CarregaRegistro_ComRelacionamentos()
     {
-        var disciplina = Builder<Disciplina>
-            .CreateNew()
-            .With(d => d.UserId = Guid.Empty)
-            .Persist();
-        var materia = Builder<Materia>
-            .CreateNew()
-            .With(m => m.Disciplina = disciplina)
-            .With(m => m.UserId = Guid.Empty)
-            .Persist();
-        var questao = Builder<Questao>
-            .CreateNew()
-            .With(q => q.Enunciado = "Enunciado1")
-            .With(q => q.Materia = materia)
-            .With(q => q.Alternativas = CriarAlternativas())
-            .With(q => q.UserId = Guid.Empty)
-            .Build();
+        var (_, materia, questao) = CriarQuestao(1, false);
 
         repositorioQuestao.Cadastrar(questao);
         dbContext.ChangeTracker.Clear();
@@ -35,7 +20,7 @@ public sealed class RepositorioQuestaoTests : RepositorioBaseTests
         var questaoSelecionada = repositorioQuestao.SelecionarPorId(questao.Id);
 
         Assert.IsNotNull(questaoSelecionada);
-        Assert.AreEqual("Enunciado1", questaoSelecionada.Enunciado);
+        Assert.AreEqual(questao.Enunciado, questaoSelecionada.Enunciado);
         Assert.AreEqual(materia.Id, questaoSelecionada.Materia.Id);
         Assert.HasCount(2, questaoSelecionada.Alternativas);
     }
@@ -43,38 +28,8 @@ public sealed class RepositorioQuestaoTests : RepositorioBaseTests
     [TestMethod]
     public void Editar_AtualizaRegistroExistente()
     {
-        var disciplina = Builder<Disciplina>
-            .CreateNew()
-            .With(d => d.UserId = Guid.Empty)
-            .Persist();
-        var materia = Builder<Materia>
-            .CreateNew()
-            .With(m => m.Disciplina = disciplina)
-            .With(m => m.UserId = Guid.Empty)
-            .Persist();
-        var questao = Builder<Questao>
-            .CreateNew()
-            .With(q => q.Enunciado = "Enunciado1")
-            .With(q => q.Materia = materia)
-            .With(q => q.Alternativas = CriarAlternativas())
-            .With(q => q.UserId = Guid.Empty)
-            .Persist();
-        var disciplinaAtualizada = Builder<Disciplina>
-            .CreateNew()
-            .With(d => d.UserId = Guid.Empty)
-            .Persist();
-        var materiaAtualizada = Builder<Materia>
-            .CreateNew()
-            .With(m => m.Disciplina = disciplinaAtualizada)
-            .With(m => m.UserId = Guid.Empty)
-            .Persist();
-        var questaoAtualizada = Builder<Questao>
-            .CreateNew()
-            .With(q => q.Enunciado = "EnunciadoAtualizado")
-            .With(q => q.Materia = materiaAtualizada)
-            .With(q => q.Alternativas = CriarAlternativas())
-            .With(q => q.UserId = Guid.Empty)
-            .Build();
+        var (_, _, questao) = CriarQuestao(1);
+        var (_, materiaAtualizada, questaoAtualizada) = CriarQuestao(2, false);
 
         bool conseguiuEditar = repositorioQuestao.Editar(questao.Id, questaoAtualizada);
         dbContext.ChangeTracker.Clear();
@@ -83,7 +38,7 @@ public sealed class RepositorioQuestaoTests : RepositorioBaseTests
 
         Assert.IsTrue(conseguiuEditar);
         Assert.IsNotNull(questaoSelecionada);
-        Assert.AreEqual("EnunciadoAtualizado", questaoSelecionada.Enunciado);
+        Assert.AreEqual(questaoAtualizada.Enunciado, questaoSelecionada.Enunciado);
         Assert.AreEqual(materiaAtualizada.Id, questaoSelecionada.Materia.Id);
         Assert.HasCount(2, questaoSelecionada.Alternativas);
     }
@@ -91,22 +46,7 @@ public sealed class RepositorioQuestaoTests : RepositorioBaseTests
     [TestMethod]
     public void Excluir_RemoveRegistroExistente()
     {
-        var disciplina = Builder<Disciplina>
-            .CreateNew()
-            .With(d => d.UserId = Guid.Empty)
-            .Persist();
-        var materia = Builder<Materia>
-            .CreateNew()
-            .With(m => m.Disciplina = disciplina)
-            .With(m => m.UserId = Guid.Empty)
-            .Persist();
-        var questao = Builder<Questao>
-            .CreateNew()
-            .With(q => q.Enunciado = "Enunciado1")
-            .With(q => q.Materia = materia)
-            .With(q => q.Alternativas = CriarAlternativas())
-            .With(q => q.UserId = Guid.Empty)
-            .Persist();
+        var (_, _, questao) = CriarQuestao(1);
         dbContext.ChangeTracker.Clear();
 
         bool conseguiuExcluir = repositorioQuestao.Excluir(questao.Id);
@@ -119,33 +59,54 @@ public sealed class RepositorioQuestaoTests : RepositorioBaseTests
     [TestMethod]
     public void SelecionarTodos_CarregaRegistros_ComRelacionamentos()
     {
+        var questoes = Enumerable
+            .Range(1, 3)
+            .Select(i => CriarQuestao(i))
+            .ToList();
+
+        dbContext.ChangeTracker.Clear();
+        var questoesSelecionadas = repositorioQuestao.SelecionarTodos();
+        var questoesIds = questoes.Select(c => c.questao.Id).ToList();
+        var materiasIds = questoes.Select(c => c.materia.Id).ToList();
+        var questoesSelecionadasIds = questoesSelecionadas.Select(q => q.Id).ToList();
+        var materiasSelecionadasIds = questoesSelecionadas.Select(q => q.Materia.Id).ToList();
+
+        Assert.HasCount(3, questoesSelecionadas);
+        CollectionAssert.AreEquivalent(questoesIds, questoesSelecionadasIds);
+        CollectionAssert.AreEquivalent(materiasIds, materiasSelecionadasIds);
+        Assert.IsTrue(questoesSelecionadas.All(q => q.Alternativas.Count == 2));
+    }
+
+    private (Disciplina disciplina, Materia materia, Questao questao) CriarQuestao(int indice, bool persistirQuestao = true)
+    {
+        if (indice <= 0)
+            throw new ArgumentOutOfRangeException(nameof(indice), "O índice deve ser maior que zero.");
+
         var disciplina = Builder<Disciplina>
             .CreateNew()
+            .With(d => d.Nome = $"Disciplina{indice}")
             .With(d => d.UserId = Guid.Empty)
             .Persist();
         var materia = Builder<Materia>
             .CreateNew()
+            .With(m => m.Nome = $"Materia{indice}")
+            .With(m => m.Serie = indice)
             .With(m => m.Disciplina = disciplina)
             .With(m => m.UserId = Guid.Empty)
             .Persist();
-        var questoes = Builder<Questao>
-            .CreateListOfSize(3)
-            .All()
-            .With(q => q.Enunciado = "Enunciado1")
+        var questao = Builder<Questao>
+            .CreateNew()
+            .With(q => q.Enunciado = $"Enunciado{indice}")
             .With(q => q.Materia = materia)
-            .With(q => q.Alternativas = CriarAlternativas())
+            .With(q => q.Alternativas = [
+                new Alternativa($"Alternativa{indice}A", false),
+                new Alternativa($"Alternativa{indice}B", true)
+            ])
             .With(q => q.UserId = Guid.Empty)
-            .Persist();
+            .Build();
+        if (persistirQuestao)
+            repositorioQuestao.Cadastrar(questao);
 
-        dbContext.ChangeTracker.Clear();
-        var questoesSelecionadas = repositorioQuestao.SelecionarTodos();
-
-        Assert.HasCount(3, questoesSelecionadas);
-        CollectionAssert.AreEquivalent(questoes.Select(q => q.Id).ToList(), questoesSelecionadas.Select(q => q.Id).ToList());
-        Assert.IsTrue(questoesSelecionadas.All(q => q.Materia.Id == materia.Id));
-        Assert.IsTrue(questoesSelecionadas.All(q => q.Alternativas.Count == 2));
+        return (disciplina, materia, questao);
     }
-
-    private static List<Alternativa> CriarAlternativas() =>
-        [new Alternativa("Alternativa1", false), new Alternativa("Alternativa2", true)];
 }
