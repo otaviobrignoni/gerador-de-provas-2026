@@ -1,3 +1,4 @@
 bin/
 obj/
 *.lscache
+dotnet-tools.json
