@@ -25,6 +25,12 @@ public sealed class RepositorioProvaTests
         repositorio = new RepositorioProva(dbContext);
     }
 
+    [TestCleanup]
+    public void LimparContexto()
+    {
+        dbContext.Dispose();
+    }
+
     [TestMethod]
     public void CadastrarESelecionarPorId_CarregaRelacionamentosDaProva()
     {
