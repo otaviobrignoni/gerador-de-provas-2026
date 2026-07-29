@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GeradorDeProvas.Infra.ModuloQuestao;
 
-public sealed class RepositorioQuestaoEmOrm(
+public sealed class RepositorioQuestao(
     GeradorDeProvasDbContext dbContext
-) : RepositorioBaseEmOrm<Questao>(dbContext), IRepositorioQuestao
+) : RepositorioBase<Questao>(dbContext), IRepositorioQuestao
 {
     public override Questao? SelecionarPorId(Guid idSelecionado)
     {

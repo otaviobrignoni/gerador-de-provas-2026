@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GeradorDeProvas.Infra.Compartilhado.Orm;
 
-public abstract class RepositorioBaseEmOrm<T>(GeradorDeProvasDbContext dbContext) where T : EntidadeBase<T>
+public abstract class RepositorioBase<T>(GeradorDeProvasDbContext dbContext) where T : EntidadeBase<T>
 {
     protected readonly DbSet<T> registros = dbContext.Set<T>();
 

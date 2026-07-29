@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GeradorDeProvas.Infra.ModuloMateria;
 
-public sealed class RepositorioMateriaEmOrm(
+public sealed class RepositorioMateria(
     GeradorDeProvasDbContext dbContext
-) : RepositorioBaseEmOrm<Materia>(dbContext), IRepositorioMateria
+) : RepositorioBase<Materia>(dbContext), IRepositorioMateria
 {
     public override Materia? SelecionarPorId(Guid idSelecionado)
     {

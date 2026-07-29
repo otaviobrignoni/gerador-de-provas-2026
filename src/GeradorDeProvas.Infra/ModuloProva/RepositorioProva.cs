@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GeradorDeProvas.Infra.ModuloProva;
 
-public sealed class RepositorioProvaEmOrm(GeradorDeProvasDbContext dbContext) : RepositorioBaseEmOrm<Prova>(dbContext), IRepositorioProva
+public sealed class RepositorioProva(GeradorDeProvasDbContext dbContext) : RepositorioBase<Prova>(dbContext), IRepositorioProva
 {
     public override Prova? SelecionarPorId(Guid idSelecionado)
     {

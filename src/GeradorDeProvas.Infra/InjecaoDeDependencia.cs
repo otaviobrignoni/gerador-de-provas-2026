@@ -67,8 +67,8 @@ public static class InjecaoDeDependencia
         .AddSignInManager() // Configuração do SignInManager
         .AddDefaultTokenProviders();
 
-        services.AddScoped<IRepositorioDisciplina, RepositorioDisciplinaEmOrm>();
-        services.AddScoped<IRepositorioMateria, RepositorioMateriaEmOrm>();
-        services.AddScoped<IRepositorioQuestao, RepositorioQuestaoEmOrm>();
+        services.AddScoped<IRepositorioDisciplina, RepositorioDisciplina>();
+        services.AddScoped<IRepositorioMateria, RepositorioMateria>();
+        services.AddScoped<IRepositorioQuestao, RepositorioQuestao>();
     }
 }

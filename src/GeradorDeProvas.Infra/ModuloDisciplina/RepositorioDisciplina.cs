@@ -3,6 +3,6 @@ using GeradorDeProvas.Infra.Compartilhado.Orm;
 
 namespace GeradorDeProvas.Infra.ModuloDisciplina;
 
-public sealed class RepositorioDisciplinaEmOrm(
+public sealed class RepositorioDisciplina(
     GeradorDeProvasDbContext dbContext
-) : RepositorioBaseEmOrm<Disciplina>(dbContext), IRepositorioDisciplina;
+) : RepositorioBase<Disciplina>(dbContext), IRepositorioDisciplina;
