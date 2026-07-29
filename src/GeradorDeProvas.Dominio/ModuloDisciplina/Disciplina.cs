@@ -1,6 +1,7 @@
 using GeradorDeProvas.Dominio.Compartilhado;
 using GeradorDeProvas.Dominio.Compartilhado.Identity;
 using GeradorDeProvas.Dominio.ModuloMateria;
+using GeradorDeProvas.Dominio.ModuloProva;
 
 namespace GeradorDeProvas.Dominio.ModuloDisciplina;
 
@@ -9,10 +10,9 @@ public class Disciplina : EntidadeBase<Disciplina>, IEntidadeDoUsuario
     public string Nome { get; set; } = string.Empty;
     public Guid UserId { get; set; }
     public List<Materia> Materias { get; set; } = [];
+    public List<Prova> Provas { get; set; } = [];
 
-    public Disciplina()
-    {
-    }
+    public Disciplina() { }
 
     public Disciplina(string nome) : this()
     {

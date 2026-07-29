@@ -1,6 +1,7 @@
 using GeradorDeProvas.Dominio.Compartilhado;
 using GeradorDeProvas.Dominio.Compartilhado.Identity;
 using GeradorDeProvas.Dominio.ModuloMateria;
+using GeradorDeProvas.Dominio.ModuloProva;
 
 namespace GeradorDeProvas.Dominio.ModuloQuestao;
 
@@ -9,17 +10,12 @@ public class Questao : EntidadeBase<Questao>, IEntidadeDoUsuario
     public string Enunciado { get; set; } = string.Empty;
     public Materia Materia { get; set; } = null!;
     public List<Alternativa> Alternativas { get; set; } = [];
+    public List<Prova> Provas { get; set; } = [];
     public Guid UserId { get; set; }
 
-    public Questao()
-    {
-    }
+    public Questao() { }
 
-    public Questao(
-        string enunciado,
-        Materia materia,
-        List<Alternativa> alternativas
-    ) : this()
+    public Questao(string enunciado, Materia materia, List<Alternativa> alternativas) : this()
     {
         Enunciado = enunciado;
         Materia = materia;

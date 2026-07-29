@@ -2,6 +2,7 @@ using System.Reflection;
 using GeradorDeProvas.Dominio.Compartilhado.Identity;
 using GeradorDeProvas.Dominio.ModuloDisciplina;
 using GeradorDeProvas.Dominio.ModuloMateria;
+using GeradorDeProvas.Dominio.ModuloProva;
 using GeradorDeProvas.Dominio.ModuloQuestao;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -18,6 +19,7 @@ public sealed class GeradorDeProvasDbContext(
     public DbSet<Materia> Materias => Set<Materia>();
     public DbSet<Questao> Questoes => Set<Questao>();
     public DbSet<Alternativa> Alternativas => Set<Alternativa>();
+    public DbSet<Prova> Provas => Set<Prova>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -41,6 +43,9 @@ public sealed class GeradorDeProvasDbContext(
                 .HasQueryFilter(q => q.UserId == userProvider.Id);
 
             modelBuilder.Entity<Alternativa>()
+                .HasQueryFilter(a => a.UserId == userProvider.Id);
+
+            modelBuilder.Entity<Prova>()
                 .HasQueryFilter(a => a.UserId == userProvider.Id);
         }
     }
