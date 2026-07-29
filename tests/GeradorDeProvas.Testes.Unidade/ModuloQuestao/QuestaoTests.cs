@@ -147,4 +147,30 @@ public sealed class QuestaoTests
         Assert.HasCount(1, erros);
         Assert.AreEqual("A questão deve possuir apenas uma alternativa correta.", erros.First());
     }
+
+    [TestMethod]
+    public void Atualizar_DeveAtualizar_EnunciadoMateriaEAlternativas()
+    {
+        var materia = new Materia("Álgebra", 8, new Disciplina("Matemática"));
+        List<Alternativa> alternativas = [
+            new Alternativa("3", false),
+            new Alternativa("4", true)
+        ];
+        var questao = new Questao("Quanto é 2 + 2?", materia, alternativas);
+
+        var materiaAtualizada = new Materia("Geometria", 9, new Disciplina("Matemática"));
+        List<Alternativa> alternativasAtualizadas = [
+            new Alternativa("25 cm²", true),
+            new Alternativa("20 cm²", false)
+        ];
+        string novoEnunciado = "Qual é a área de um quadrado com lado de 5 cm?";
+        var questaoAtualizada = new Questao(novoEnunciado, materiaAtualizada, alternativasAtualizadas);
+
+        questao.Atualizar(questaoAtualizada);
+
+        Assert.AreEqual(novoEnunciado, questao.Enunciado);
+        Assert.AreSame(materiaAtualizada, questao.Materia);
+        CollectionAssert.AreEqual(alternativasAtualizadas, questao.Alternativas);
+        Assert.IsTrue(questao.Alternativas.All(a => ReferenceEquals(questao, a.Questao)));
+    }
 }
