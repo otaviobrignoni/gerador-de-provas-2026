@@ -1,14 +1,12 @@
 using FluentResults;
 using GeradorDeProvas.Aplicacao.Compartilhado;
 using GeradorDeProvas.Dominio.ModuloMateria;
+using GeradorDeProvas.Dominio.ModuloProva;
 using GeradorDeProvas.Dominio.ModuloQuestao;
 
 namespace GeradorDeProvas.Aplicacao.ModuloQuestao;
 
-public class ServicoQuestao(
-    IRepositorioQuestao repositorioQuestao,
-    IRepositorioMateria repositorioMateria
-) : ServicoBase<Questao>
+public class ServicoQuestao(IRepositorioQuestao repositorioQuestao, IRepositorioMateria repositorioMateria, IRepositorioProva? repositorioProva = null) : ServicoBase<Questao>
 {
     public Result Cadastrar(CadastrarQuestaoDto dto)
     {
@@ -20,9 +18,7 @@ public class ServicoQuestao(
         Questao novaQuestao = new(
             dto.Enunciado,
             resultadoMateria.Value,
-            dto.Alternativas
-                .Select(a => new Alternativa(a.Texto, a.Correta))
-                .ToList()
+            [.. dto.Alternativas.Select(a => new Alternativa(a.Texto, a.Correta))]
         );
 
         Result resultadoValidacao = ValidarEntidade(novaQuestao);
@@ -45,9 +41,7 @@ public class ServicoQuestao(
         Questao questaoAtualizada = new(
             dto.Enunciado,
             resultadoMateria.Value,
-            dto.Alternativas
-                .Select(a => new Alternativa(a.Texto, a.Correta))
-                .ToList()
+            [.. dto.Alternativas.Select(a => new Alternativa(a.Texto, a.Correta))]
         );
 
         Result resultadoValidacao = ValidarEntidade(questaoAtualizada);
@@ -70,6 +64,9 @@ public class ServicoQuestao(
         if (questao == null)
             return Falha(string.Empty, "Questão não encontrada.");
 
+        if (PossuiProvasVinculadas(questao.Id))
+            return Falha(string.Empty, "Não é possível excluir esta questão, pois ela está vinculada a uma prova.");
+
         repositorioQuestao.Excluir(id);
 
         return Result.Ok();
@@ -77,7 +74,7 @@ public class ServicoQuestao(
 
     public List<ListarQuestaoDto> SelecionarTodos()
     {
-        return repositorioQuestao
+        return [.. repositorioQuestao
             .SelecionarTodos()
             .Select(q => new ListarQuestaoDto(
                 q.Id,
@@ -85,7 +82,7 @@ public class ServicoQuestao(
                 q.Materia.Nome,
                 q.Alternativas.FirstOrDefault(a => a.Correta)?.Texto ?? string.Empty
             ))
-            .ToList();
+        ];
     }
 
     public Result<DetalhesQuestaoDto> SelecionarPorId(Guid id)
@@ -100,18 +97,16 @@ public class ServicoQuestao(
             questao.Enunciado,
             questao.Materia.Id,
             questao.Materia.Nome,
-            questao.Alternativas
-                .Select(a => new AlternativaDto(a.Id, a.Texto, a.Correta))
-                .ToList()
+            [.. questao.Alternativas.Select(a => new AlternativaDto(a.Id, a.Texto, a.Correta))]
         ));
     }
 
     public List<OpcaoMateriaQuestaoDto> SelecionarMaterias()
     {
-        return repositorioMateria
+        return [.. repositorioMateria
             .SelecionarTodos()
             .Select(m => new OpcaoMateriaQuestaoDto(m.Id, m.Nome))
-            .ToList();
+        ];
     }
 
     private Result<Materia> SelecionarMateria(Guid materiaId)
@@ -119,13 +114,15 @@ public class ServicoQuestao(
         Materia? materia = repositorioMateria.SelecionarPorId(materiaId);
 
         if (materia == null)
-        {
-            return Result.Fail<Materia>(
-                new Error("Selecione uma matéria válida.")
-                    .WithMetadata("Campo", nameof(CadastrarQuestaoDto.MateriaId))
-            );
-        }
+            return Result.Fail<Materia>(new Error("Selecione uma matéria válida.").WithMetadata("Campo", nameof(CadastrarQuestaoDto.MateriaId)));
 
         return Result.Ok(materia);
+    }
+
+    private bool PossuiProvasVinculadas(Guid questaoId)
+    {
+        if (repositorioProva is null)
+            return false;
+        return repositorioProva.SelecionarTodos().Any(p => p.Questoes.Any(q => q.Id == questaoId));
     }
 }
