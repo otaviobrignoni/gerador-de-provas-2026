@@ -9,9 +9,7 @@ namespace GeradorDeProvas.Aplicacao.ModuloProva;
 
 public sealed class ServicoProva(IRepositorioProva repositorioProva, IRepositorioDisciplina repositorioDisciplina, IRepositorioMateria repositorioMateria, IRepositorioQuestao repositorioQuestao) : ServicoBase<Prova>
 {
-    public Result Cadastrar(CadastrarProvaDto dto) => Cadastrar(dto, null);
-
-    public Result Cadastrar(CadastrarProvaDto dto, List<Guid>? questaoIds)
+    public Result Cadastrar(CadastrarProvaDto dto, List<Guid>? questaoIds = null)
     {
         Result<Prova> resultadoProva = PrepararProva(dto, questaoIds);
 
@@ -31,16 +29,9 @@ public sealed class ServicoProva(IRepositorioProva repositorioProva, IRepositori
         Prova? provaOriginal = repositorioProva.SelecionarPorId(dto.Id);
 
         if (provaOriginal is null)
-            return Falha(string.Empty, "Prova não encontrada.");
+            return Result.Fail("Prova não encontrada.");
 
-        Prova provaDuplicada = new(
-            dto.Titulo,
-            provaOriginal.Disciplina,
-            provaOriginal.Materia,
-            provaOriginal.Serie,
-            provaOriginal.QuantidadeQuestoes,
-            provaOriginal.ProvaRecuperacao
-        );
+        Prova provaDuplicada = provaOriginal.ParaCopia(dto.Titulo);
 
         Result resultadoValidacao = ValidarEntidade(provaDuplicada);
 
@@ -57,23 +48,14 @@ public sealed class ServicoProva(IRepositorioProva repositorioProva, IRepositori
         bool conseguiuExcluir = repositorioProva.Excluir(id);
 
         if (!conseguiuExcluir)
-            return Falha(string.Empty, "Prova não encontrada.");
+            return Result.Fail("Prova não encontrada.");
 
         return Result.Ok();
     }
 
     public List<ListarProvaDto> SelecionarTodos()
     {
-        return [.. repositorioProva
-            .SelecionarTodos()
-            .Select(p => new ListarProvaDto(
-                p.Id,
-                p.Titulo,
-                p.Disciplina.Nome,
-                p.Materia?.Nome,
-                p.QuantidadeQuestoes,
-                p.ProvaRecuperacao
-            ))];
+        return repositorioProva.SelecionarTodos().ParaListarDto();
     }
 
     public Result<DetalhesProvaDto> SelecionarPorId(Guid id)
@@ -83,7 +65,7 @@ public sealed class ServicoProva(IRepositorioProva repositorioProva, IRepositori
         if (prova is null)
             return Result.Fail("Prova não encontrada.");
 
-        return Result.Ok(MapearDetalhes(prova));
+        return Result.Ok(prova.ParaDetalhesDto());
     }
 
     public Result<List<QuestaoProvaDto>> SortearQuestoes(CadastrarProvaDto dto)
@@ -93,56 +75,50 @@ public sealed class ServicoProva(IRepositorioProva repositorioProva, IRepositori
         if (resultadoProva.IsFailed)
             return Result.Fail<List<QuestaoProvaDto>>(resultadoProva.Errors);
 
-        return Result.Ok(resultadoProva.Value.Questoes.Select(MapearQuestao).ToList());
+        return Result.Ok(resultadoProva.Value.Questoes.ParaQuestoesDto());
     }
 
     public Result<List<QuestaoProvaDto>> SelecionarQuestoes(IEnumerable<Guid> ids)
     {
         List<Guid> idsOrdenados = [.. ids];
-        List<Questao> questoes = [.. repositorioQuestao
-            .SelecionarTodos()
-            .Where(q => idsOrdenados.Contains(q.Id))
-        ];
+        List<Questao> questoes = [.. repositorioQuestao.SelecionarTodos().Where(q => idsOrdenados.Contains(q.Id))];
 
         if (questoes.Count != idsOrdenados.Count)
             return Result.Fail<List<QuestaoProvaDto>>("Uma ou mais questões não foram encontradas.");
 
         Dictionary<Guid, Questao> porId = questoes.ToDictionary(q => q.Id);
 
-        return Result.Ok(idsOrdenados.Select(id => MapearQuestao(porId[id])).ToList());
+        return Result.Ok(idsOrdenados.Select(id => porId[id].ParaQuestaoDto()).ToList());
     }
 
     public List<OpcaoDisciplinaProvaDto> SelecionarDisciplinas()
     {
-        return [.. repositorioDisciplina
-            .SelecionarTodos()
-            .Select(d => new OpcaoDisciplinaProvaDto(d.Id, d.Nome))
-        ];
+        return repositorioDisciplina.SelecionarTodos().ParaOpcoesDto();
     }
 
     public List<OpcaoMateriaProvaDto> SelecionarMaterias(Guid disciplinaId, int serie)
     {
-        return [.. repositorioMateria
-            .SelecionarTodos()
-            .Where(m => m.Disciplina.Id == disciplinaId && m.Serie == serie)
-            .Select(m => new OpcaoMateriaProvaDto(m.Id, m.Nome, m.Serie))
-        ];
+        return SelecionarMateriasFiltradas(disciplinaId, serie);
     }
 
     public List<OpcaoMateriaProvaDto> SelecionarMaterias(Guid disciplinaId)
     {
-        return [.. repositorioMateria
+        return SelecionarMateriasFiltradas(disciplinaId, null);
+    }
+
+    private List<OpcaoMateriaProvaDto> SelecionarMateriasFiltradas(Guid disciplinaId, int? serie)
+    {
+        return repositorioMateria
             .SelecionarTodos()
-            .Where(m => m.Disciplina.Id == disciplinaId)
-            .Select(m => new OpcaoMateriaProvaDto(m.Id, m.Nome, m.Serie))
-        ];
+            .Where(m => m.Disciplina.Id == disciplinaId && (!serie.HasValue || m.Serie == serie))
+            .ParaOpcoesDto();
     }
 
     private Result<Disciplina> SelecionarDisciplina(Guid id)
     {
         Disciplina? disciplina = repositorioDisciplina.SelecionarPorId(id);
         if (disciplina is null)
-            return Result.Fail<Disciplina>(new Error("Selecione uma disciplina válida.").WithMetadata("Campo", nameof(CadastrarProvaDto.DisciplinaId)));
+            return Falha<Disciplina>(nameof(CadastrarProvaDto.DisciplinaId), "Selecione uma disciplina válida.");
 
         return Result.Ok(disciplina);
     }
@@ -150,7 +126,7 @@ public sealed class ServicoProva(IRepositorioProva repositorioProva, IRepositori
     private Result<Prova> PrepararProva(CadastrarProvaDto dto, IReadOnlyCollection<Guid>? questaoIds)
     {
         if (ExisteProvaComMesmoTitulo(dto.Titulo))
-            return Result.Fail<Prova>(new Error("Já existe uma prova com este título.").WithMetadata("Campo", nameof(dto.Titulo)));
+            return Falha<Prova>(nameof(dto.Titulo), "Já existe uma prova com este título.");
 
         Result<Disciplina> resultadoDisciplina = SelecionarDisciplina(dto.DisciplinaId);
 
@@ -168,14 +144,7 @@ public sealed class ServicoProva(IRepositorioProva repositorioProva, IRepositori
             .Where(m => dto.ProvaRecuperacao || m.Id == dto.MateriaId)
         ];
 
-        Prova prova = new(
-            dto.Titulo,
-            resultadoDisciplina.Value,
-            resultadoMateria.Value,
-            dto.Serie,
-            dto.QuantidadeQuestoes,
-            dto.ProvaRecuperacao
-        );
+        Prova prova = dto.ParaEntidade(resultadoDisciplina.Value, resultadoMateria.Value);
 
         Result resultadoValidacao = ValidarEntidade(prova);
 
@@ -192,11 +161,7 @@ public sealed class ServicoProva(IRepositorioProva repositorioProva, IRepositori
         }
         else
         {
-            Result<List<Questao>> resultadoQuestoes = SelecionarQuestoes(
-                materiasElegiveis,
-                dto.QuantidadeQuestoes,
-                questaoIds
-            );
+            Result<List<Questao>> resultadoQuestoes = SelecionarQuestoes(materiasElegiveis, dto.QuantidadeQuestoes, questaoIds);
 
             if (resultadoQuestoes.IsFailed)
                 return resultadoQuestoes.ToResult();
@@ -209,31 +174,7 @@ public sealed class ServicoProva(IRepositorioProva repositorioProva, IRepositori
 
     private bool ExisteProvaComMesmoTitulo(string titulo, Guid? idIgnorado = null)
     {
-        string tituloNormalizado = NormalizarTitulo(titulo);
-
-        return repositorioProva.SelecionarTodos().Any(p => p.Id != idIgnorado && NormalizarTitulo(p.Titulo) == tituloNormalizado);
-    }
-
-    private static string NormalizarTitulo(string titulo) => titulo.Trim().ToLowerInvariant();
-
-    private static DetalhesProvaDto MapearDetalhes(Prova prova)
-    {
-        return new DetalhesProvaDto(
-            prova.Id,
-            prova.Titulo,
-            prova.Disciplina.Id,
-            prova.Disciplina.Nome,
-            prova.Materia?.Id,
-            prova.Materia?.Nome,
-            prova.Serie,
-            prova.QuantidadeQuestoes,
-            prova.ProvaRecuperacao,
-            [.. prova.Questoes.Select(q => new QuestaoProvaDto(
-                q.Id,
-                q.Enunciado,
-                [.. q.Alternativas.Select(a => new AlternativaProvaDto(a.Id, a.Texto, a.Correta))]
-            ))]
-        );
+        return repositorioProva.SelecionarTodos().Any(p => p.Id != idIgnorado && p.Titulo.Normalizar() == titulo.Normalizar());
     }
 
     private Result<Materia?> SelecionarMateria(Guid disciplinaId, Guid? materiaId, bool recuperacao)
@@ -242,12 +183,12 @@ public sealed class ServicoProva(IRepositorioProva repositorioProva, IRepositori
             return Result.Ok<Materia?>(null);
 
         if (!materiaId.HasValue)
-            return Result.Fail<Materia?>(new Error("Selecione uma matéria válida.").WithMetadata("Campo", nameof(CadastrarProvaDto.MateriaId)));
+            return Falha<Materia?>(nameof(CadastrarProvaDto.MateriaId), "Selecione uma matéria válida.");
 
         Materia? materia = repositorioMateria.SelecionarPorId(materiaId.Value);
 
         if (materia is null || materia.Disciplina.Id != disciplinaId)
-            return Result.Fail<Materia?>(new Error("A matéria selecionada não pertence à disciplina informada.").WithMetadata("Campo", nameof(CadastrarProvaDto.MateriaId)));
+            return Falha<Materia?>(nameof(CadastrarProvaDto.MateriaId), "A matéria selecionada não pertence à disciplina informada.");
 
         return Result.Ok<Materia?>(materia);
     }
@@ -256,40 +197,21 @@ public sealed class ServicoProva(IRepositorioProva repositorioProva, IRepositori
     {
         List<Guid> idsMaterias = [.. materiasElegiveis.Select(m => m.Id)];
 
-        return [.. repositorioQuestao
-            .SelecionarTodos()
-            .Where(q => idsMaterias.Contains(q.Materia.Id))
-        ];
+        return [.. repositorioQuestao.SelecionarTodos().Where(q => idsMaterias.Contains(q.Materia.Id))];
     }
 
-    private Result<List<Questao>> SelecionarQuestoes(
-        List<Materia> materiasElegiveis,
-        int quantidade,
-        IReadOnlyCollection<Guid> questaoIds
-    )
+    private Result<List<Questao>> SelecionarQuestoes(List<Materia> materiasElegiveis, int quantidade, IReadOnlyCollection<Guid> questaoIds)
     {
         if (questaoIds.Count != quantidade || questaoIds.Distinct().Count() != questaoIds.Count)
-            return Result.Fail<List<Questao>>(new Error("A quantidade de questões confirmada é inválida.").WithMetadata("Campo", nameof(CadastrarProvaDto.QuantidadeQuestoes)));
+            return Falha<List<Questao>>(nameof(CadastrarProvaDto.QuantidadeQuestoes), "A quantidade de questões confirmada é inválida.");
 
         HashSet<Guid> idsMaterias = [.. materiasElegiveis.Select(m => m.Id)];
-        List<Questao> questoes = [.. repositorioQuestao
-            .SelecionarTodos()
-            .Where(q => questaoIds.Contains(q.Id) && idsMaterias.Contains(q.Materia.Id))
-        ];
+        List<Questao> questoes = [.. repositorioQuestao.SelecionarTodos().Where(q => questaoIds.Contains(q.Id) && idsMaterias.Contains(q.Materia.Id))];
 
         if (questoes.Count != quantidade)
-            return Result.Fail<List<Questao>>(new Error("Uma ou mais questões confirmadas não pertencem à configuração da prova.").WithMetadata("Campo", nameof(CadastrarProvaDto.QuantidadeQuestoes)));
+            return Falha<List<Questao>>(nameof(CadastrarProvaDto.QuantidadeQuestoes), "Uma ou mais questões confirmadas não pertencem à configuração da prova.");
 
         Dictionary<Guid, Questao> porId = questoes.ToDictionary(q => q.Id);
         return Result.Ok(questaoIds.Select(id => porId[id]).ToList());
-    }
-
-    private static QuestaoProvaDto MapearQuestao(Questao questao)
-    {
-        return new QuestaoProvaDto(
-            questao.Id,
-            questao.Enunciado,
-            [.. questao.Alternativas.Select(a => new AlternativaProvaDto(a.Id, a.Texto, a.Correta))]
-        );
     }
 }

@@ -15,11 +15,7 @@ public class ServicoQuestao(IRepositorioQuestao repositorioQuestao, IRepositorio
         if (resultadoMateria.IsFailed)
             return resultadoMateria.ToResult();
 
-        Questao novaQuestao = new(
-            dto.Enunciado,
-            resultadoMateria.Value,
-            [.. dto.Alternativas.Select(a => new Alternativa(a.Texto, a.Correta))]
-        );
+        Questao novaQuestao = dto.ParaEntidade(resultadoMateria.Value);
 
         Result resultadoValidacao = ValidarEntidade(novaQuestao);
 
@@ -38,11 +34,7 @@ public class ServicoQuestao(IRepositorioQuestao repositorioQuestao, IRepositorio
         if (resultadoMateria.IsFailed)
             return resultadoMateria.ToResult();
 
-        Questao questaoAtualizada = new(
-            dto.Enunciado,
-            resultadoMateria.Value,
-            [.. dto.Alternativas.Select(a => new Alternativa(a.Texto, a.Correta))]
-        );
+        Questao questaoAtualizada = dto.ParaEntidade(resultadoMateria.Value);
 
         Result resultadoValidacao = ValidarEntidade(questaoAtualizada);
 
@@ -74,15 +66,7 @@ public class ServicoQuestao(IRepositorioQuestao repositorioQuestao, IRepositorio
 
     public List<ListarQuestaoDto> SelecionarTodos()
     {
-        return [.. repositorioQuestao
-            .SelecionarTodos()
-            .Select(q => new ListarQuestaoDto(
-                q.Id,
-                q.Enunciado,
-                q.Materia.Nome,
-                q.Alternativas.FirstOrDefault(a => a.Correta)?.Texto ?? string.Empty
-            ))
-        ];
+        return repositorioQuestao.SelecionarTodos().ParaListarDto();
     }
 
     public Result<DetalhesQuestaoDto> SelecionarPorId(Guid id)
@@ -92,21 +76,12 @@ public class ServicoQuestao(IRepositorioQuestao repositorioQuestao, IRepositorio
         if (questao == null)
             return Result.Fail("Questão não encontrada.");
 
-        return Result.Ok(new DetalhesQuestaoDto(
-            questao.Id,
-            questao.Enunciado,
-            questao.Materia.Id,
-            questao.Materia.Nome,
-            [.. questao.Alternativas.Select(a => new AlternativaDto(a.Id, a.Texto, a.Correta))]
-        ));
+        return Result.Ok(questao.ParaDetalhesDto());
     }
 
     public List<OpcaoMateriaQuestaoDto> SelecionarMaterias()
     {
-        return [.. repositorioMateria
-            .SelecionarTodos()
-            .Select(m => new OpcaoMateriaQuestaoDto(m.Id, m.Nome))
-        ];
+        return repositorioMateria.SelecionarTodos().ParaOpcoesDto();
     }
 
     private Result<Materia> SelecionarMateria(Guid materiaId)
@@ -114,7 +89,7 @@ public class ServicoQuestao(IRepositorioQuestao repositorioQuestao, IRepositorio
         Materia? materia = repositorioMateria.SelecionarPorId(materiaId);
 
         if (materia == null)
-            return Result.Fail<Materia>(new Error("Selecione uma matéria válida.").WithMetadata("Campo", nameof(CadastrarQuestaoDto.MateriaId)));
+            return Falha<Materia>(nameof(CadastrarQuestaoDto.MateriaId), "Selecione uma matéria válida.");
 
         return Result.Ok(materia);
     }

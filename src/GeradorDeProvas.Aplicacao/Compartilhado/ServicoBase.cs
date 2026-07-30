@@ -19,4 +19,9 @@ public abstract class ServicoBase<T> where T : EntidadeBase<T>
     {
         return Result.Fail(new Error(mensagem).WithMetadata("Campo", campo));
     }
+
+    protected static Result<TResultado> Falha<TResultado>(string campo, string mensagem)
+    {
+        return Result.Fail<TResultado>(new Error(mensagem).WithMetadata("Campo", campo));
+    }
 }

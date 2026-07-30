@@ -6,11 +6,7 @@ using GeradorDeProvas.Dominio.ModuloQuestao;
 
 namespace GeradorDeProvas.Aplicacao.ModuloMateria;
 
-public class ServicoMateria(
-    IRepositorioMateria repositorioMateria,
-    IRepositorioDisciplina repositorioDisciplina,
-    IRepositorioQuestao repositorioQuestao
-) : ServicoBase<Materia>
+public class ServicoMateria(IRepositorioMateria repositorioMateria, IRepositorioDisciplina repositorioDisciplina, IRepositorioQuestao repositorioQuestao) : ServicoBase<Materia>
 {
     public Result Cadastrar(CadastrarMateriaDto dto)
     {
@@ -22,7 +18,7 @@ public class ServicoMateria(
         if (resultadoDisciplina.IsFailed)
             return resultadoDisciplina.ToResult();
 
-        Materia novaMateria = new(dto.Nome, dto.Serie, resultadoDisciplina.Value);
+        Materia novaMateria = dto.ParaEntidade(resultadoDisciplina.Value);
 
         Result resultadoValidacao = ValidarEntidade(novaMateria);
 
@@ -44,7 +40,7 @@ public class ServicoMateria(
         if (resultadoDisciplina.IsFailed)
             return resultadoDisciplina.ToResult();
 
-        Materia materiaAtualizada = new(dto.Nome, dto.Serie, resultadoDisciplina.Value);
+        Materia materiaAtualizada = dto.ParaEntidade(resultadoDisciplina.Value);
 
         Result resultadoValidacao = ValidarEntidade(materiaAtualizada);
 
@@ -76,10 +72,7 @@ public class ServicoMateria(
 
     public List<ListarMateriaDto> SelecionarTodos()
     {
-        return repositorioMateria
-            .SelecionarTodos()
-            .Select(m => new ListarMateriaDto(m.Id, m.Nome, m.Serie, m.Disciplina.Nome))
-            .ToList();
+        return repositorioMateria.SelecionarTodos().ParaListarDto();
     }
 
     public Result<DetalhesMateriaDto> SelecionarPorId(Guid id)
@@ -89,21 +82,12 @@ public class ServicoMateria(
         if (materia == null)
             return Result.Fail("Matéria não encontrada.");
 
-        return Result.Ok(new DetalhesMateriaDto(
-            materia.Id,
-            materia.Nome,
-            materia.Serie,
-            materia.Disciplina.Id,
-            materia.Disciplina.Nome
-        ));
+        return Result.Ok(materia.ParaDetalhesDto());
     }
 
     public List<OpcaoDisciplinaMateriaDto> SelecionarDisciplinas()
     {
-        return repositorioDisciplina
-            .SelecionarTodos()
-            .Select(d => new OpcaoDisciplinaMateriaDto(d.Id, d.Nome))
-            .ToList();
+        return repositorioDisciplina.SelecionarTodos().ParaOpcoesDto();
     }
 
     private Result<Disciplina> SelecionarDisciplina(Guid disciplinaId)
@@ -111,34 +95,18 @@ public class ServicoMateria(
         Disciplina? disciplina = repositorioDisciplina.SelecionarPorId(disciplinaId);
 
         if (disciplina == null)
-        {
-            return Result.Fail<Disciplina>(
-                new Error("Selecione uma disciplina válida.")
-                    .WithMetadata("Campo", nameof(CadastrarMateriaDto.DisciplinaId))
-            );
-        }
+            return Falha<Disciplina>(nameof(CadastrarMateriaDto.DisciplinaId), "Selecione uma disciplina válida.");
 
         return Result.Ok(disciplina);
     }
 
     private bool ExisteMateriaComMesmoNome(string nome, Guid? idIgnorado = null)
     {
-        string nomeNormalizado = NormalizarNome(nome);
-
-        return repositorioMateria
-            .SelecionarTodos()
-            .Any(m => m.Id != idIgnorado && NormalizarNome(m.Nome) == nomeNormalizado);
-    }
-
-    private static string NormalizarNome(string nome)
-    {
-        return nome.Trim().ToLowerInvariant();
+        return repositorioMateria.SelecionarTodos().Any(m => m.Id != idIgnorado && m.Nome.Normalizar() == nome.Normalizar());
     }
 
     private bool PossuiQuestoesVinculadas(Guid materiaId)
     {
-        return repositorioQuestao
-            .SelecionarTodos()
-            .Any(q => q.Materia.Id == materiaId);
+        return repositorioQuestao.SelecionarTodos().Any(q => q.Materia.Id == materiaId);
     }
 }

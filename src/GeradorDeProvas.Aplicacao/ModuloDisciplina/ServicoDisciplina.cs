@@ -5,17 +5,14 @@ using GeradorDeProvas.Dominio.ModuloMateria;
 
 namespace GeradorDeProvas.Aplicacao.ModuloDisciplina;
 
-public class ServicoDisciplina(
-    IRepositorioDisciplina repositorioDisciplina,
-    IRepositorioMateria repositorioMateria
-) : ServicoBase<Disciplina>
+public class ServicoDisciplina(IRepositorioDisciplina repositorioDisciplina, IRepositorioMateria repositorioMateria) : ServicoBase<Disciplina>
 {
     public Result Cadastrar(CadastrarDisciplinaDto dto)
     {
         if (ExisteDisciplinaComMesmoNome(dto.Nome))
             return Falha(nameof(dto.Nome), "Já existe uma disciplina com este nome.");
 
-        Disciplina novaDisciplina = new(dto.Nome);
+        Disciplina novaDisciplina = dto.ParaEntidade();
 
         Result resultadoValidacao = ValidarEntidade(novaDisciplina);
 
@@ -32,7 +29,7 @@ public class ServicoDisciplina(
         if (ExisteDisciplinaComMesmoNome(dto.Nome, dto.Id))
             return Falha(nameof(dto.Nome), "Já existe uma disciplina com este nome.");
 
-        Disciplina disciplinaAtualizada = new(dto.Nome);
+        Disciplina disciplinaAtualizada = dto.ParaEntidade();
 
         Result resultadoValidacao = ValidarEntidade(disciplinaAtualizada);
 
@@ -64,10 +61,7 @@ public class ServicoDisciplina(
 
     public List<ListarDisciplinaDto> SelecionarTodos()
     {
-        return repositorioDisciplina
-            .SelecionarTodos()
-            .Select(d => new ListarDisciplinaDto(d.Id, d.Nome))
-            .ToList();
+        return repositorioDisciplina.SelecionarTodos().ParaListarDto();
     }
 
     public Result<DetalhesDisciplinaDto> SelecionarPorId(Guid id)
@@ -77,27 +71,16 @@ public class ServicoDisciplina(
         if (disciplina == null)
             return Result.Fail("Disciplina não encontrada.");
 
-        return Result.Ok(new DetalhesDisciplinaDto(disciplina.Id, disciplina.Nome));
+        return Result.Ok(disciplina.ParaDetalhesDto());
     }
 
     private bool ExisteDisciplinaComMesmoNome(string nome, Guid? idIgnorado = null)
     {
-        string nomeNormalizado = NormalizarNome(nome);
-
-        return repositorioDisciplina
-            .SelecionarTodos()
-            .Any(d => d.Id != idIgnorado && NormalizarNome(d.Nome) == nomeNormalizado);
-    }
-
-    private static string NormalizarNome(string nome)
-    {
-        return nome.Trim().ToLowerInvariant();
+        return repositorioDisciplina.SelecionarTodos().Any(d => d.Id != idIgnorado && d.Nome.Normalizar() == nome.Normalizar());
     }
 
     private bool PossuiMateriasVinculadas(Guid disciplinaId)
     {
-        return repositorioMateria
-            .SelecionarTodos()
-            .Any(m => m.Disciplina.Id == disciplinaId);
+        return repositorioMateria.SelecionarTodos().Any(m => m.Disciplina.Id == disciplinaId);
     }
 }
