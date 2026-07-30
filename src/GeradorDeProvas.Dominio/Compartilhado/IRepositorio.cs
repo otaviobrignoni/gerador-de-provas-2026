@@ -1,3 +1,5 @@
+using System.Linq.Expressions;
+
 namespace GeradorDeProvas.Dominio.Compartilhado;
 
 public interface IRepositorio<T> where T : EntidadeBase<T>
@@ -6,6 +8,5 @@ public interface IRepositorio<T> where T : EntidadeBase<T>
     bool Editar(Guid idSelecionado, T entidadeAtualizada);
     bool Excluir(Guid idSelecionado);
     T? SelecionarPorId(Guid idSelecionado);
-    List<T> SelecionarTodos();
-    List<T> Filtrar(Func<T, bool> filtro);
+    List<T> SelecionarTodos(Expression<Func<T, bool>>? filtro = null);
 }

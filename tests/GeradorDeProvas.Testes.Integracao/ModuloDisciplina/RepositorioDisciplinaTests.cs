@@ -59,7 +59,7 @@ public sealed class RepositorioDisciplinaTests : RepositorioBaseTests
     }
 
     [TestMethod]
-    public void SelecionarTodos_CarregaRegistros()
+    public void SelecionarTodos_SemFiltro_CarregaRegistros()
     {
         // Arrange
         var disciplinas = Enumerable
@@ -78,6 +78,43 @@ public sealed class RepositorioDisciplinaTests : RepositorioBaseTests
 
         Assert.HasCount(3, disciplinasSelecionadas);
         CollectionAssert.AreEquivalent(disciplinasIds, disciplinasSelecionadasIds);
+    }
+
+    [TestMethod]
+    public void SelecionarTodos_ComFiltro_CarregaApenasRegistrosCorrespondentes()
+    {
+        // Arrange
+        CriarDisciplina(1);
+        var disciplinaEsperada = CriarDisciplina(2);
+        CriarDisciplina(3);
+
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var disciplinasSelecionadas = repositorioDisciplina
+            .SelecionarTodos(d => d.Id == disciplinaEsperada.Id);
+
+        // Assert
+        Assert.HasCount(1, disciplinasSelecionadas);
+        Assert.AreEqual(disciplinaEsperada.Id, disciplinasSelecionadas.Single().Id);
+    }
+
+    [TestMethod]
+    public void SelecionarTodos_ComFiltroSemCorrespondencias_RetornaListaVazia()
+    {
+        // Arrange
+        CriarDisciplina(1);
+        CriarDisciplina(2);
+        CriarDisciplina(3);
+
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var disciplinasSelecionadas = repositorioDisciplina
+            .SelecionarTodos(d => d.Nome == "Disciplina inexistente");
+
+        // Assert
+        Assert.IsEmpty(disciplinasSelecionadas);
     }
 
     private Disciplina CriarDisciplina(int indice, bool persistir = true)

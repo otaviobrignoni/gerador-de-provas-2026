@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using GeradorDeProvas.Dominio.ModuloQuestao;
 using GeradorDeProvas.Infra.Compartilhado.Orm;
 using Microsoft.EntityFrameworkCore;
@@ -16,20 +17,12 @@ public sealed class RepositorioQuestao(
             .SingleOrDefault(q => q.Id == idSelecionado);
     }
 
-    public override List<Questao> SelecionarTodos()
+    public override List<Questao> SelecionarTodos(Expression<Func<Questao, bool>>? filtro = null)
     {
         return [.. registros
             .Include(q => q.Materia)
             .Include(q => q.Alternativas)
-        ];
-    }
-
-    public override List<Questao> Filtrar(Func<Questao, bool> filtro)
-    {
-        return [.. registros
-            .Include(q => q.Materia)
-            .Include(q => q.Alternativas)
-            .Where(filtro)
+            .Where(filtro ?? (_ => true))
         ];
     }
 }

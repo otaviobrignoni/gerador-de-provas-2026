@@ -3,6 +3,7 @@ using GeradorDeProvas.Aplicacao.ModuloMateria;
 using GeradorDeProvas.Dominio.ModuloDisciplina;
 using GeradorDeProvas.Dominio.ModuloMateria;
 using GeradorDeProvas.Dominio.ModuloQuestao;
+using GeradorDeProvas.Testes.Unidade.Compartilhado;
 using Moq;
 
 namespace GeradorDeProvas.Testes.Unidade.ModuloMateria;
@@ -19,7 +20,7 @@ public sealed class ServicoMateriaTests
         Mock<IRepositorioDisciplina> repositorioDisciplina = new();
         Mock<IRepositorioQuestao> repositorioQuestao = new();
         Materia? materiaCadastrada = null;
-        repositorioMateria.Setup(r => r.SelecionarTodos()).Returns([]);
+        repositorioMateria.ConfigurarSelecao();
         repositorioDisciplina.Setup(r => r.SelecionarPorId(disciplina.Id)).Returns(disciplina);
         repositorioMateria.Setup(r => r.Cadastrar(It.IsAny<Materia>())).Callback<Materia>(materia => materiaCadastrada = materia);
         ServicoMateria servicoMateria = new(repositorioMateria.Object, repositorioDisciplina.Object, repositorioQuestao.Object);
@@ -44,7 +45,7 @@ public sealed class ServicoMateriaTests
         Mock<IRepositorioMateria> repositorioMateria = new();
         Mock<IRepositorioDisciplina> repositorioDisciplina = new();
         Mock<IRepositorioQuestao> repositorioQuestao = new();
-        repositorioMateria.Setup(r => r.SelecionarTodos()).Returns([]);
+        repositorioMateria.ConfigurarSelecao();
         repositorioDisciplina.Setup(r => r.SelecionarPorId(disciplinaId)).Returns((Disciplina?)null);
         ServicoMateria servicoMateria = new(repositorioMateria.Object, repositorioDisciplina.Object, repositorioQuestao.Object);
 
@@ -67,7 +68,7 @@ public sealed class ServicoMateriaTests
         Mock<IRepositorioMateria> repositorioMateria = new();
         Mock<IRepositorioDisciplina> repositorioDisciplina = new();
         Mock<IRepositorioQuestao> repositorioQuestao = new();
-        repositorioMateria.Setup(r => r.SelecionarTodos()).Returns([]);
+        repositorioMateria.ConfigurarSelecao();
         repositorioDisciplina.Setup(r => r.SelecionarPorId(disciplina.Id)).Returns(disciplina);
         repositorioMateria.Setup(r => r.Editar(materiaId, It.IsAny<Materia>())).Returns(false);
         ServicoMateria servicoMateria = new(repositorioMateria.Object, repositorioDisciplina.Object, repositorioQuestao.Object);
@@ -93,7 +94,7 @@ public sealed class ServicoMateriaTests
         Mock<IRepositorioDisciplina> repositorioDisciplina = new();
         Mock<IRepositorioQuestao> repositorioQuestao = new();
         repositorioMateria.Setup(r => r.SelecionarPorId(materia.Id)).Returns(materia);
-        repositorioQuestao.Setup(r => r.SelecionarTodos()).Returns([questao]);
+        repositorioQuestao.ConfigurarSelecao(questao);
         ServicoMateria servicoMateria = new(repositorioMateria.Object, repositorioDisciplina.Object, repositorioQuestao.Object);
 
         // Act

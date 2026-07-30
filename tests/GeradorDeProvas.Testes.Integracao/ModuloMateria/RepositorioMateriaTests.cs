@@ -62,7 +62,7 @@ public sealed class RepositorioMateriaTests : RepositorioBaseTests
     }
 
     [TestMethod]
-    public void SelecionarTodos_CarregaRegistros_ComRelacionamentos()
+    public void SelecionarTodos_SemFiltro_CarregaRegistros_ComRelacionamentos()
     {
         // Arrange
         var materias = Enumerable
@@ -82,6 +82,44 @@ public sealed class RepositorioMateriaTests : RepositorioBaseTests
         Assert.HasCount(3, materiasSelecionadas);
         CollectionAssert.AreEquivalent(materiasIds, materiasSelecionadasIds);
         Assert.IsTrue(materiasSelecionadas.All(m => m.Disciplina is not null));
+    }
+
+    [TestMethod]
+    public void SelecionarTodos_ComFiltro_CarregaRegistroCorrespondente_ComRelacionamentos()
+    {
+        // Arrange
+        CriarMateria(1);
+        var (disciplinaEsperada, materiaEsperada) = CriarMateria(2);
+        CriarMateria(3);
+
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var materiasSelecionadas = repositorioMateria
+            .SelecionarTodos(m => m.Serie == materiaEsperada.Serie);
+
+        // Assert
+        Assert.HasCount(1, materiasSelecionadas);
+        Assert.AreEqual(materiaEsperada.Id, materiasSelecionadas.Single().Id);
+        Assert.AreEqual(disciplinaEsperada.Id, materiasSelecionadas.Single().Disciplina.Id);
+    }
+
+    [TestMethod]
+    public void SelecionarTodos_ComFiltroSemCorrespondencias_RetornaListaVazia()
+    {
+        // Arrange
+        CriarMateria(1);
+        CriarMateria(2);
+        CriarMateria(3);
+
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var materiasSelecionadas = repositorioMateria
+            .SelecionarTodos(m => m.Serie == 99);
+
+        // Assert
+        Assert.IsEmpty(materiasSelecionadas);
     }
 
     private (Disciplina disciplina, Materia materia) CriarMateria(int indice, bool persistirMateria = true)

@@ -67,7 +67,7 @@ public sealed class RepositorioProvaTests : RepositorioBaseTests
     }
 
     [TestMethod]
-    public void SelecionarTodos_RetornaProvasComRelacionamentos()
+    public void SelecionarTodos_SemFiltro_RetornaProvasComRelacionamentos()
     {
         // Arrange
         var (disciplina, materia, questoes, _) = CriarProva(1);
@@ -83,6 +83,47 @@ public sealed class RepositorioProvaTests : RepositorioBaseTests
         Assert.AreEqual(materia!.Nome, provas.First().Materia!.Nome);
         Assert.HasCount(questoes.Count, provas.First().Questoes);
         Assert.IsTrue(provas.First().Questoes.All(q => q.Alternativas.Count == 2));
+    }
+
+    [TestMethod]
+    public void SelecionarTodos_ComFiltro_RetornaProvaCorrespondente_ComRelacionamentos()
+    {
+        // Arrange
+        CriarProva(1);
+        var (disciplinaEsperada, materiaEsperada, questoesEsperadas, provaEsperada) = CriarProva(2);
+        CriarProva(3);
+
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var provasSelecionadas = repositorioProva
+            .SelecionarTodos(p => p.Id == provaEsperada.Id);
+
+        // Assert
+        Assert.HasCount(1, provasSelecionadas);
+        Assert.AreEqual(provaEsperada.Id, provasSelecionadas.Single().Id);
+        Assert.AreEqual(disciplinaEsperada.Id, provasSelecionadas.Single().Disciplina.Id);
+        Assert.AreEqual(materiaEsperada!.Id, provasSelecionadas.Single().Materia!.Id);
+        Assert.HasCount(questoesEsperadas.Count, provasSelecionadas.Single().Questoes);
+        Assert.IsTrue(provasSelecionadas.Single().Questoes.All(q => q.Alternativas.Count == 2));
+    }
+
+    [TestMethod]
+    public void SelecionarTodos_ComFiltroSemCorrespondencias_RetornaListaVazia()
+    {
+        // Arrange
+        CriarProva(1);
+        CriarProva(2);
+        CriarProva(3);
+
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var provasSelecionadas = repositorioProva
+            .SelecionarTodos(p => p.Titulo == "Prova inexistente");
+
+        // Assert
+        Assert.IsEmpty(provasSelecionadas);
     }
 
     private (Disciplina disciplina, Materia? materia, List<Questao> questoes, Prova prova) CriarProva(int indice, bool persistirProva = true, bool provaRecuperacao = false)

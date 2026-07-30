@@ -102,11 +102,18 @@ public class ServicoMateria(IRepositorioMateria repositorioMateria, IRepositorio
 
     private bool ExisteMateriaComMesmoNome(string nome, Guid? idIgnorado = null)
     {
-        return repositorioMateria.SelecionarTodos().Any(m => m.Id != idIgnorado && m.Nome.Normalizar() == nome.Normalizar());
+        string nomeNormalizado = nome.Normalizar();
+
+        return repositorioMateria
+            .SelecionarTodos(m => (!idIgnorado.HasValue || m.Id != idIgnorado.Value)
+                && m.Nome.Trim().ToLower() == nomeNormalizado)
+            .Any();
     }
 
     private bool PossuiQuestoesVinculadas(Guid materiaId)
     {
-        return repositorioQuestao.SelecionarTodos().Any(q => q.Materia.Id == materiaId);
+        return repositorioQuestao
+            .SelecionarTodos(q => q.Materia.Id == materiaId)
+            .Any();
     }
 }

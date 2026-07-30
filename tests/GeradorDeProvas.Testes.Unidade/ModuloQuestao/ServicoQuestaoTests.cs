@@ -4,6 +4,7 @@ using GeradorDeProvas.Dominio.ModuloDisciplina;
 using GeradorDeProvas.Dominio.ModuloMateria;
 using GeradorDeProvas.Dominio.ModuloProva;
 using GeradorDeProvas.Dominio.ModuloQuestao;
+using GeradorDeProvas.Testes.Unidade.Compartilhado;
 using Moq;
 
 namespace GeradorDeProvas.Testes.Unidade.ModuloQuestao;
@@ -89,7 +90,7 @@ public sealed class ServicoQuestaoTests
         Mock<IRepositorioMateria> repositorioMateria = new();
         Mock<IRepositorioProva> repositorioProva = new();
         repositorioQuestao.Setup(r => r.SelecionarPorId(questao.Id)).Returns(questao);
-        repositorioProva.Setup(r => r.SelecionarTodos()).Returns([prova]);
+        repositorioProva.ConfigurarSelecao(prova);
         ServicoQuestao servico = new(repositorioQuestao.Object, repositorioMateria.Object, repositorioProva.Object);
 
         // Act

@@ -98,6 +98,9 @@ public class ServicoQuestao(IRepositorioQuestao repositorioQuestao, IRepositorio
     {
         if (repositorioProva is null)
             return false;
-        return repositorioProva.SelecionarTodos().Any(p => p.Questoes.Any(q => q.Id == questaoId));
+
+        return repositorioProva
+            .SelecionarTodos(p => p.Questoes.Any(q => q.Id == questaoId))
+            .Any();
     }
 }

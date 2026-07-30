@@ -76,11 +76,18 @@ public class ServicoDisciplina(IRepositorioDisciplina repositorioDisciplina, IRe
 
     private bool ExisteDisciplinaComMesmoNome(string nome, Guid? idIgnorado = null)
     {
-        return repositorioDisciplina.SelecionarTodos().Any(d => d.Id != idIgnorado && d.Nome.Normalizar() == nome.Normalizar());
+        string nomeNormalizado = nome.Normalizar();
+
+        return repositorioDisciplina
+            .SelecionarTodos(d => (!idIgnorado.HasValue || d.Id != idIgnorado.Value)
+                && d.Nome.Trim().ToLower() == nomeNormalizado)
+            .Any();
     }
 
     private bool PossuiMateriasVinculadas(Guid disciplinaId)
     {
-        return repositorioMateria.SelecionarTodos().Any(m => m.Disciplina.Id == disciplinaId);
+        return repositorioMateria
+            .SelecionarTodos(m => m.Disciplina.Id == disciplinaId)
+            .Any();
     }
 }

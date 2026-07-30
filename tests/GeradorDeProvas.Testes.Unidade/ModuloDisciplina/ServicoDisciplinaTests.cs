@@ -2,6 +2,7 @@ using FluentResults;
 using GeradorDeProvas.Aplicacao.ModuloDisciplina;
 using GeradorDeProvas.Dominio.ModuloDisciplina;
 using GeradorDeProvas.Dominio.ModuloMateria;
+using GeradorDeProvas.Testes.Unidade.Compartilhado;
 using Moq;
 
 namespace GeradorDeProvas.Testes.Unidade.ModuloDisciplina;
@@ -16,7 +17,7 @@ public sealed class ServicoDisciplinaTests
         var repositorioDisciplina = new Mock<IRepositorioDisciplina>();
         var repositorioMateria = new Mock<IRepositorioMateria>();
         Disciplina? disciplinaCadastrada = null;
-        repositorioDisciplina.Setup(r => r.SelecionarTodos()).Returns([]);
+        repositorioDisciplina.ConfigurarSelecao();
         repositorioDisciplina.Setup(r => r.Cadastrar(It.IsAny<Disciplina>()))
             .Callback<Disciplina>(disciplina => disciplinaCadastrada = disciplina);
         ServicoDisciplina servicoDisciplina = new(repositorioDisciplina.Object, repositorioMateria.Object);
@@ -37,7 +38,7 @@ public sealed class ServicoDisciplinaTests
         // Arrange
         var repositorioDisciplina = new Mock<IRepositorioDisciplina>();
         var repositorioMateria = new Mock<IRepositorioMateria>();
-        repositorioDisciplina.Setup(r => r.SelecionarTodos()).Returns([new Disciplina("Matemática")]);
+        repositorioDisciplina.ConfigurarSelecao(new Disciplina("Matemática"));
         ServicoDisciplina servicoDisciplina = new(repositorioDisciplina.Object, repositorioMateria.Object);
 
         // Act
@@ -58,7 +59,7 @@ public sealed class ServicoDisciplinaTests
         var repositorioDisciplina = new Mock<IRepositorioDisciplina>();
         var repositorioMateria = new Mock<IRepositorioMateria>();
         Disciplina? disciplinaAtualizada = null;
-        repositorioDisciplina.Setup(r => r.SelecionarTodos()).Returns([disciplina]);
+        repositorioDisciplina.ConfigurarSelecao(disciplina);
         repositorioDisciplina.Setup(r => r.Editar(disciplina.Id, It.IsAny<Disciplina>()))
             .Callback<Guid, Disciplina>((_, disciplina) => disciplinaAtualizada = disciplina)
             .Returns(true);
@@ -82,7 +83,7 @@ public sealed class ServicoDisciplinaTests
         var outraDisciplina = new Disciplina("Física");
         var repositorioDisciplina = new Mock<IRepositorioDisciplina>();
         var repositorioMateria = new Mock<IRepositorioMateria>();
-        repositorioDisciplina.Setup(r => r.SelecionarTodos()).Returns([disciplina, outraDisciplina]);
+        repositorioDisciplina.ConfigurarSelecao(disciplina, outraDisciplina);
         ServicoDisciplina servicoDisciplina = new(repositorioDisciplina.Object, repositorioMateria.Object);
 
         // Act
@@ -102,7 +103,7 @@ public sealed class ServicoDisciplinaTests
         var disciplinaId = Guid.NewGuid();
         var repositorioDisciplina = new Mock<IRepositorioDisciplina>();
         var repositorioMateria = new Mock<IRepositorioMateria>();
-        repositorioDisciplina.Setup(r => r.SelecionarTodos()).Returns([]);
+        repositorioDisciplina.ConfigurarSelecao();
         repositorioDisciplina.Setup(r => r.Editar(disciplinaId, It.IsAny<Disciplina>())).Returns(false);
         ServicoDisciplina servicoDisciplina = new(repositorioDisciplina.Object, repositorioMateria.Object);
 
@@ -123,7 +124,7 @@ public sealed class ServicoDisciplinaTests
         Mock<IRepositorioDisciplina> repositorioDisciplina = new();
         Mock<IRepositorioMateria> repositorioMateria = new();
         repositorioDisciplina.Setup(r => r.SelecionarPorId(disciplina.Id)).Returns(disciplina);
-        repositorioMateria.Setup(r => r.SelecionarTodos()).Returns([]);
+        repositorioMateria.ConfigurarSelecao();
         ServicoDisciplina servicoDisciplina = new(repositorioDisciplina.Object, repositorioMateria.Object);
 
         // Act
@@ -142,7 +143,7 @@ public sealed class ServicoDisciplinaTests
         var repositorioDisciplina = new Mock<IRepositorioDisciplina>();
         var repositorioMateria = new Mock<IRepositorioMateria>();
         repositorioDisciplina.Setup(r => r.SelecionarPorId(disciplina.Id)).Returns(disciplina);
-        repositorioMateria.Setup(r => r.SelecionarTodos()).Returns([new Materia("Álgebra", 7, disciplina)]);
+        repositorioMateria.ConfigurarSelecao(new Materia("Álgebra", 7, disciplina));
         ServicoDisciplina servicoDisciplina = new(repositorioDisciplina.Object, repositorioMateria.Object);
 
         // Act

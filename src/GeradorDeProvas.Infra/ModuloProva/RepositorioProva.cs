@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using GeradorDeProvas.Dominio.ModuloProva;
 using GeradorDeProvas.Infra.Compartilhado.Orm;
 using Microsoft.EntityFrameworkCore;
@@ -16,13 +17,14 @@ public sealed class RepositorioProva(GeradorDeProvasDbContext dbContext) : Repos
             .SingleOrDefault(p => p.Id == idSelecionado);
     }
 
-    public override List<Prova> SelecionarTodos()
+    public override List<Prova> SelecionarTodos(Expression<Func<Prova, bool>>? filtro = null)
     {
         return [.. registros
             .Include(p => p.Disciplina)
             .Include(p => p.Materia)
             .Include(p => p.Questoes)
                 .ThenInclude(q => q.Alternativas)
+            .Where(filtro ?? (_ => true))
         ];
     }
 }

@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using GeradorDeProvas.Dominio.Compartilhado;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,19 +11,17 @@ public abstract class RepositorioBase<T>(GeradorDeProvasDbContext dbContext) whe
     public void Cadastrar(T entidade)
     {
         registros.Add(entidade);
-
         dbContext.SaveChanges();
     }
 
     public bool Editar(Guid idSelecionado, T entidadeAtualizada)
     {
-        T? registroSelecionado = SelecionarPorId(idSelecionado);
+        T? entidade = SelecionarPorId(idSelecionado);
 
-        if (registroSelecionado == null)
+        if (entidade == null)
             return false;
 
-        registroSelecionado.Atualizar(entidadeAtualizada);
-
+        entidade.Atualizar(entidadeAtualizada);
         dbContext.SaveChanges();
 
         return true;
@@ -30,13 +29,12 @@ public abstract class RepositorioBase<T>(GeradorDeProvasDbContext dbContext) whe
 
     public bool Excluir(Guid idSelecionado)
     {
-        T? TSelecionado = SelecionarPorId(idSelecionado);
+        T? entidade = SelecionarPorId(idSelecionado);
 
-        if (TSelecionado == null)
+        if (entidade == null)
             return false;
 
-        registros.Remove(TSelecionado);
-
+        registros.Remove(entidade);
         dbContext.SaveChanges();
 
         return true;
@@ -47,13 +45,8 @@ public abstract class RepositorioBase<T>(GeradorDeProvasDbContext dbContext) whe
         return registros.SingleOrDefault(c => c.Id == idSelecionado);
     }
 
-    public virtual List<T> SelecionarTodos()
+    public virtual List<T> SelecionarTodos(Expression<Func<T, bool>>? filtro = null)
     {
-        return registros.ToList();
-    }
-
-    public virtual List<T> Filtrar(Func<T, bool> filtro)
-    {
-        return registros.Where(filtro).ToList();
+        return [.. registros.Where(filtro ?? (_ => true))];
     }
 }

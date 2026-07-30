@@ -66,7 +66,7 @@ public sealed class RepositorioQuestaoTests : RepositorioBaseTests
     }
 
     [TestMethod]
-    public void SelecionarTodos_CarregaRegistros_ComRelacionamentos()
+    public void SelecionarTodos_SemFiltro_CarregaRegistros_ComRelacionamentos()
     {
         // Arrange
         var questoes = Enumerable
@@ -89,6 +89,45 @@ public sealed class RepositorioQuestaoTests : RepositorioBaseTests
         CollectionAssert.AreEquivalent(questoesIds, questoesSelecionadasIds);
         CollectionAssert.AreEquivalent(materiasIds, materiasSelecionadasIds);
         Assert.IsTrue(questoesSelecionadas.All(q => q.Alternativas.Count == 2));
+    }
+
+    [TestMethod]
+    public void SelecionarTodos_ComFiltro_CarregaRegistroCorrespondente_ComRelacionamentos()
+    {
+        // Arrange
+        CriarQuestao(1);
+        var (_, materiaEsperada, questaoEsperada) = CriarQuestao(2);
+        CriarQuestao(3);
+
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var questoesSelecionadas = repositorioQuestao
+            .SelecionarTodos(q => q.Id == questaoEsperada.Id);
+
+        // Assert
+        Assert.HasCount(1, questoesSelecionadas);
+        Assert.AreEqual(questaoEsperada.Id, questoesSelecionadas.Single().Id);
+        Assert.AreEqual(materiaEsperada.Id, questoesSelecionadas.Single().Materia.Id);
+        Assert.HasCount(2, questoesSelecionadas.Single().Alternativas);
+    }
+
+    [TestMethod]
+    public void SelecionarTodos_ComFiltroSemCorrespondencias_RetornaListaVazia()
+    {
+        // Arrange
+        CriarQuestao(1);
+        CriarQuestao(2);
+        CriarQuestao(3);
+
+        dbContext.ChangeTracker.Clear();
+
+        // Act
+        var questoesSelecionadas = repositorioQuestao
+            .SelecionarTodos(q => q.Enunciado == "Enunciado inexistente");
+
+        // Assert
+        Assert.IsEmpty(questoesSelecionadas);
     }
 
     private (Disciplina disciplina, Materia materia, Questao questao) CriarQuestao(int indice, bool persistirQuestao = true)

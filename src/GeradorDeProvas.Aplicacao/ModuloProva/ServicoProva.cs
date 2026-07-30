@@ -81,7 +81,8 @@ public sealed class ServicoProva(IRepositorioProva repositorioProva, IRepositori
     public Result<List<QuestaoProvaDto>> SelecionarQuestoes(IEnumerable<Guid> ids)
     {
         List<Guid> idsOrdenados = [.. ids];
-        List<Questao> questoes = [.. repositorioQuestao.SelecionarTodos().Where(q => idsOrdenados.Contains(q.Id))];
+        List<Questao> questoes = repositorioQuestao
+            .SelecionarTodos(q => idsOrdenados.Contains(q.Id));
 
         if (questoes.Count != idsOrdenados.Count)
             return Result.Fail<List<QuestaoProvaDto>>("Uma ou mais questões não foram encontradas.");
@@ -109,8 +110,8 @@ public sealed class ServicoProva(IRepositorioProva repositorioProva, IRepositori
     private List<OpcaoMateriaProvaDto> SelecionarMateriasFiltradas(Guid disciplinaId, int? serie)
     {
         return repositorioMateria
-            .SelecionarTodos()
-            .Where(m => m.Disciplina.Id == disciplinaId && (!serie.HasValue || m.Serie == serie))
+            .SelecionarTodos(m => m.Disciplina.Id == disciplinaId
+                && (!serie.HasValue || m.Serie == serie))
             .ParaOpcoesDto();
     }
 
@@ -138,11 +139,10 @@ public sealed class ServicoProva(IRepositorioProva repositorioProva, IRepositori
         if (resultadoMateria.IsFailed)
             return resultadoMateria.ToResult();
 
-        List<Materia> materiasElegiveis = [.. repositorioMateria
-            .SelecionarTodos()
-            .Where(m => m.Disciplina.Id == dto.DisciplinaId && m.Serie == dto.Serie)
-            .Where(m => dto.ProvaRecuperacao || m.Id == dto.MateriaId)
-        ];
+        List<Materia> materiasElegiveis = repositorioMateria
+            .SelecionarTodos(m => m.Disciplina.Id == dto.DisciplinaId
+                && m.Serie == dto.Serie
+                && (dto.ProvaRecuperacao || m.Id == dto.MateriaId));
 
         Prova prova = dto.ParaEntidade(resultadoDisciplina.Value, resultadoMateria.Value);
 
@@ -174,7 +174,12 @@ public sealed class ServicoProva(IRepositorioProva repositorioProva, IRepositori
 
     private bool ExisteProvaComMesmoTitulo(string titulo, Guid? idIgnorado = null)
     {
-        return repositorioProva.SelecionarTodos().Any(p => p.Id != idIgnorado && p.Titulo.Normalizar() == titulo.Normalizar());
+        string tituloNormalizado = titulo.Normalizar();
+
+        return repositorioProva
+            .SelecionarTodos(p => (!idIgnorado.HasValue || p.Id != idIgnorado.Value)
+                && p.Titulo.Trim().ToLower() == tituloNormalizado)
+            .Any();
     }
 
     private Result<Materia?> SelecionarMateria(Guid disciplinaId, Guid? materiaId, bool recuperacao)
@@ -197,7 +202,8 @@ public sealed class ServicoProva(IRepositorioProva repositorioProva, IRepositori
     {
         List<Guid> idsMaterias = [.. materiasElegiveis.Select(m => m.Id)];
 
-        return [.. repositorioQuestao.SelecionarTodos().Where(q => idsMaterias.Contains(q.Materia.Id))];
+        return repositorioQuestao
+            .SelecionarTodos(q => idsMaterias.Contains(q.Materia.Id));
     }
 
     private Result<List<Questao>> SelecionarQuestoes(List<Materia> materiasElegiveis, int quantidade, IReadOnlyCollection<Guid> questaoIds)
@@ -206,7 +212,9 @@ public sealed class ServicoProva(IRepositorioProva repositorioProva, IRepositori
             return Falha<List<Questao>>(nameof(CadastrarProvaDto.QuantidadeQuestoes), "A quantidade de questões confirmada é inválida.");
 
         HashSet<Guid> idsMaterias = [.. materiasElegiveis.Select(m => m.Id)];
-        List<Questao> questoes = [.. repositorioQuestao.SelecionarTodos().Where(q => questaoIds.Contains(q.Id) && idsMaterias.Contains(q.Materia.Id))];
+        List<Questao> questoes = repositorioQuestao
+            .SelecionarTodos(q => questaoIds.Contains(q.Id)
+                && idsMaterias.Contains(q.Materia.Id));
 
         if (questoes.Count != quantidade)
             return Falha<List<Questao>>(nameof(CadastrarProvaDto.QuantidadeQuestoes), "Uma ou mais questões confirmadas não pertencem à configuração da prova.");

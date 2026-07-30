@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using GeradorDeProvas.Dominio.ModuloMateria;
 using GeradorDeProvas.Infra.Compartilhado.Orm;
 using Microsoft.EntityFrameworkCore;
@@ -15,10 +16,11 @@ public sealed class RepositorioMateria(
             .SingleOrDefault(m => m.Id == idSelecionado);
     }
 
-    public override List<Materia> SelecionarTodos()
+    public override List<Materia> SelecionarTodos(Expression<Func<Materia, bool>>? filtro = null)
     {
-        return registros
+        return [.. registros
             .Include(m => m.Disciplina)
-            .ToList();
+            .Where(filtro ?? (_ => true))
+        ];
     }
 }
