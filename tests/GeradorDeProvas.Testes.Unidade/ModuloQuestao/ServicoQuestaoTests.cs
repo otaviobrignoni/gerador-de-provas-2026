@@ -16,17 +16,16 @@ public sealed class ServicoQuestaoTests
     public void Cadastrar_DadosValidos_CadastraQuestaoComAlternativas()
     {
         // Arrange
-        Disciplina disciplina = new("Matemática");
-        Materia materia = new("Álgebra", 7, disciplina);
-        Mock<IRepositorioQuestao> repositorioQuestao = new();
-        Mock<IRepositorioMateria> repositorioMateria = new();
+        var (_, materia, _) = CriarQuestao();
+        var dto = CriarDtoCadastro(materia.Id);
+        var (repositorioQuestao, repositorioMateria, _, servicoQuestao) = CriarServico();
         repositorioMateria.Setup(r => r.SelecionarPorId(materia.Id)).Returns(materia);
         Questao? questaoCadastrada = null;
-        repositorioQuestao.Setup(r => r.Cadastrar(It.IsAny<Questao>())).Callback<Questao>(questao => questaoCadastrada = questao);
-        ServicoQuestao servicoQuestao = new(repositorioQuestao.Object, repositorioMateria.Object);
+        repositorioQuestao.Setup(r => r.Cadastrar(It.IsAny<Questao>()))
+            .Callback<Questao>(questao => questaoCadastrada = questao);
 
         // Act
-        Result resultado = servicoQuestao.Cadastrar(new CadastrarQuestaoDto("Quanto é 2 + 2?", materia.Id, [new CadastrarAlternativaDto("4", true), new CadastrarAlternativaDto("5", false)]));
+        Result resultado = servicoQuestao.Cadastrar(dto);
 
         // Assert
         Assert.IsTrue(resultado.IsSuccess);
@@ -42,13 +41,12 @@ public sealed class ServicoQuestaoTests
     {
         // Arrange
         Guid materiaId = Guid.CreateVersion7();
-        Mock<IRepositorioQuestao> repositorioQuestao = new();
-        Mock<IRepositorioMateria> repositorioMateria = new();
+        var dto = CriarDtoCadastro(materiaId);
+        var (repositorioQuestao, repositorioMateria, _, servicoQuestao) = CriarServico();
         repositorioMateria.Setup(r => r.SelecionarPorId(materiaId)).Returns((Materia?)null);
-        ServicoQuestao servicoQuestao = new(repositorioQuestao.Object, repositorioMateria.Object);
 
         // Act
-        Result resultado = servicoQuestao.Cadastrar(new CadastrarQuestaoDto("Quanto é 2 + 2?", materiaId, [new CadastrarAlternativaDto("4", true), new CadastrarAlternativaDto("5", false)]));
+        Result resultado = servicoQuestao.Cadastrar(dto);
 
         // Assert
         Assert.IsTrue(resultado.IsFailed);
@@ -60,17 +58,15 @@ public sealed class ServicoQuestaoTests
     public void Editar_QuestaoInexistente_RetornaFalha()
     {
         // Arrange
-        Disciplina disciplina = new("Matemática");
-        Materia materia = new("Álgebra", 7, disciplina);
+        var (_, materia, _) = CriarQuestao();
         Guid questaoId = Guid.CreateVersion7();
-        Mock<IRepositorioQuestao> repositorioQuestao = new();
-        Mock<IRepositorioMateria> repositorioMateria = new();
+        var dto = CriarDtoEdicao(questaoId, materia.Id);
+        var (repositorioQuestao, repositorioMateria, _, servicoQuestao) = CriarServico();
         repositorioMateria.Setup(r => r.SelecionarPorId(materia.Id)).Returns(materia);
         repositorioQuestao.Setup(r => r.Editar(questaoId, It.IsAny<Questao>())).Returns(false);
-        ServicoQuestao servicoQuestao = new(repositorioQuestao.Object, repositorioMateria.Object);
 
         // Act
-        Result resultado = servicoQuestao.Editar(new EditarQuestaoDto(questaoId, "Quanto é 2 + 2?", materia.Id, [new CadastrarAlternativaDto("4", true), new CadastrarAlternativaDto("5", false)]));
+        Result resultado = servicoQuestao.Editar(dto);
 
         // Assert
         Assert.IsTrue(resultado.IsFailed);
@@ -82,16 +78,11 @@ public sealed class ServicoQuestaoTests
     public void Excluir_QuestaoVinculadaAProva_RetornaFalha()
     {
         // Arrange
-        Disciplina disciplina = new("Matemática");
-        Materia materia = new("Álgebra", 7, disciplina);
-        Questao questao = new("Quanto é 2 + 2?", materia, [new Alternativa("4", true), new Alternativa("5", false)]);
-        Prova prova = new("Avaliação", disciplina, materia, 7, 1, false, [questao]);
-        Mock<IRepositorioQuestao> repositorioQuestao = new();
-        Mock<IRepositorioMateria> repositorioMateria = new();
-        Mock<IRepositorioProva> repositorioProva = new();
+        var (disciplina, materia, questao) = CriarQuestao();
+        var prova = new Prova("Avaliação", disciplina, materia, 7, 1, false, [questao]);
+        var (repositorioQuestao, _, repositorioProva, servico) = CriarServico(criarRepositorioProva: true);
         repositorioQuestao.Setup(r => r.SelecionarPorId(questao.Id)).Returns(questao);
-        repositorioProva.ConfigurarSelecao(prova);
-        ServicoQuestao servico = new(repositorioQuestao.Object, repositorioMateria.Object, repositorioProva.Object);
+        repositorioProva!.ConfigurarSelecao(prova);
 
         // Act
         Result resultado = servico.Excluir(questao.Id);
@@ -100,5 +91,45 @@ public sealed class ServicoQuestaoTests
         Assert.IsTrue(resultado.IsFailed);
         Assert.Contains("vinculada a uma prova", resultado.Errors.Single().Message);
         repositorioQuestao.Verify(r => r.Excluir(It.IsAny<Guid>()), Times.Never);
+    }
+
+    private static (Disciplina disciplina, Materia materia, Questao questao) CriarQuestao()
+    {
+        var disciplina = new Disciplina("Matemática");
+        var materia = new Materia("Álgebra", 7, disciplina);
+        var questao = new Questao("Quanto é 2 + 2?", materia, CriarAlternativas());
+
+        return (disciplina, materia, questao);
+    }
+
+    private static List<Alternativa> CriarAlternativas(int primeiroValor = 4, bool primeiraCorreta = true)
+    {
+        return [new Alternativa($"{primeiroValor}", primeiraCorreta), new Alternativa($"{primeiroValor + 1}", !primeiraCorreta)];
+    }
+
+    private static List<CadastrarAlternativaDto> CriarAlternativasDto(int primeiroValor = 4, bool primeiraCorreta = true)
+    {
+        return [new CadastrarAlternativaDto($"{primeiroValor}", primeiraCorreta), new CadastrarAlternativaDto($"{primeiroValor + 1}", !primeiraCorreta)];
+    }
+
+    private static CadastrarQuestaoDto CriarDtoCadastro(Guid materiaId)
+    {
+        return new CadastrarQuestaoDto("Quanto é 2 + 2?", materiaId, CriarAlternativasDto());
+    }
+
+    private static EditarQuestaoDto CriarDtoEdicao(Guid id, Guid materiaId)
+    {
+        return new EditarQuestaoDto(id, "Quanto é 2 + 2?", materiaId, CriarAlternativasDto());
+    }
+
+    private static (Mock<IRepositorioQuestao> repositorioQuestao, Mock<IRepositorioMateria> repositorioMateria, Mock<IRepositorioProva>? repositorioProva, ServicoQuestao servicoQuestao) CriarServico(bool criarRepositorioProva = false)
+    {
+        Mock<IRepositorioQuestao> repositorioQuestao = new();
+        Mock<IRepositorioMateria> repositorioMateria = new();
+        Mock<IRepositorioProva>? repositorioProva = criarRepositorioProva ? new() : null;
+
+        ServicoQuestao servicoQuestao = new(repositorioQuestao.Object, repositorioMateria.Object, repositorioProva?.Object);
+
+        return (repositorioQuestao, repositorioMateria, repositorioProva, servicoQuestao);
     }
 }

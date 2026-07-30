@@ -14,16 +14,15 @@ public sealed class ServicoDisciplinaTests
     public void Cadastrar_DadosValidos_PersisteDisciplina()
     {
         // Arrange
-        var repositorioDisciplina = new Mock<IRepositorioDisciplina>();
-        var repositorioMateria = new Mock<IRepositorioMateria>();
+        var dto = CriarDtoCadastro();
+        var (repositorioDisciplina, _, servicoDisciplina) = CriarServico();
         Disciplina? disciplinaCadastrada = null;
         repositorioDisciplina.ConfigurarSelecao();
         repositorioDisciplina.Setup(r => r.Cadastrar(It.IsAny<Disciplina>()))
             .Callback<Disciplina>(disciplina => disciplinaCadastrada = disciplina);
-        ServicoDisciplina servicoDisciplina = new(repositorioDisciplina.Object, repositorioMateria.Object);
 
         // Act
-        Result resultado = servicoDisciplina.Cadastrar(new CadastrarDisciplinaDto("Matemática"));
+        Result resultado = servicoDisciplina.Cadastrar(dto);
 
         // Assert
         Assert.IsTrue(resultado.IsSuccess);
@@ -36,13 +35,13 @@ public sealed class ServicoDisciplinaTests
     public void Cadastrar_NomeDuplicado_RetornaFalha()
     {
         // Arrange
-        var repositorioDisciplina = new Mock<IRepositorioDisciplina>();
-        var repositorioMateria = new Mock<IRepositorioMateria>();
-        repositorioDisciplina.ConfigurarSelecao(new Disciplina("Matemática"));
-        ServicoDisciplina servicoDisciplina = new(repositorioDisciplina.Object, repositorioMateria.Object);
+        var dto = CriarDtoCadastro(" MATEMÁTICA ");
+        var disciplinaExistente = CriarDisciplina();
+        var (repositorioDisciplina, _, servicoDisciplina) = CriarServico();
+        repositorioDisciplina.ConfigurarSelecao(disciplinaExistente);
 
         // Act
-        Result resultado = servicoDisciplina.Cadastrar(new CadastrarDisciplinaDto(" MATEMÁTICA "));
+        Result resultado = servicoDisciplina.Cadastrar(dto);
 
         // Assert
         Assert.IsTrue(resultado.IsFailed);
@@ -55,18 +54,17 @@ public sealed class ServicoDisciplinaTests
     public void Editar_DadosValidos_AtualizaDisciplina()
     {
         // Arrange
-        var disciplina = new Disciplina("Matemática");
-        var repositorioDisciplina = new Mock<IRepositorioDisciplina>();
-        var repositorioMateria = new Mock<IRepositorioMateria>();
+        var disciplina = CriarDisciplina();
+        var dto = CriarDtoEdicao(disciplina.Id, "Física");
+        var (repositorioDisciplina, _, servicoDisciplina) = CriarServico();
         Disciplina? disciplinaAtualizada = null;
         repositorioDisciplina.ConfigurarSelecao(disciplina);
         repositorioDisciplina.Setup(r => r.Editar(disciplina.Id, It.IsAny<Disciplina>()))
             .Callback<Guid, Disciplina>((_, disciplina) => disciplinaAtualizada = disciplina)
             .Returns(true);
-        ServicoDisciplina servicoDisciplina = new(repositorioDisciplina.Object, repositorioMateria.Object);
 
         // Act
-        Result resultado = servicoDisciplina.Editar(new EditarDisciplinaDto(disciplina.Id, "Física"));
+        Result resultado = servicoDisciplina.Editar(dto);
 
         // Assert
         Assert.IsTrue(resultado.IsSuccess);
@@ -79,15 +77,14 @@ public sealed class ServicoDisciplinaTests
     public void Editar_NomeDuplicado_RetornaFalha()
     {
         // Arrange
-        var disciplina = new Disciplina("Matemática");
-        var outraDisciplina = new Disciplina("Física");
-        var repositorioDisciplina = new Mock<IRepositorioDisciplina>();
-        var repositorioMateria = new Mock<IRepositorioMateria>();
+        var disciplina = CriarDisciplina();
+        var outraDisciplina = CriarDisciplina("Física");
+        var dto = CriarDtoEdicao(disciplina.Id, " FÍSICA ");
+        var (repositorioDisciplina, _, servicoDisciplina) = CriarServico();
         repositorioDisciplina.ConfigurarSelecao(disciplina, outraDisciplina);
-        ServicoDisciplina servicoDisciplina = new(repositorioDisciplina.Object, repositorioMateria.Object);
 
         // Act
-        Result resultado = servicoDisciplina.Editar(new EditarDisciplinaDto(disciplina.Id, " FÍSICA "));
+        Result resultado = servicoDisciplina.Editar(dto);
 
         // Assert
         Assert.IsTrue(resultado.IsFailed);
@@ -101,14 +98,13 @@ public sealed class ServicoDisciplinaTests
     {
         // Arrange
         var disciplinaId = Guid.NewGuid();
-        var repositorioDisciplina = new Mock<IRepositorioDisciplina>();
-        var repositorioMateria = new Mock<IRepositorioMateria>();
+        var dto = CriarDtoEdicao(disciplinaId);
+        var (repositorioDisciplina, _, servicoDisciplina) = CriarServico();
         repositorioDisciplina.ConfigurarSelecao();
         repositorioDisciplina.Setup(r => r.Editar(disciplinaId, It.IsAny<Disciplina>())).Returns(false);
-        ServicoDisciplina servicoDisciplina = new(repositorioDisciplina.Object, repositorioMateria.Object);
 
         // Act
-        Result resultado = servicoDisciplina.Editar(new EditarDisciplinaDto(disciplinaId, "Matemática"));
+        Result resultado = servicoDisciplina.Editar(dto);
 
         // Assert
         Assert.IsTrue(resultado.IsFailed);
@@ -120,12 +116,10 @@ public sealed class ServicoDisciplinaTests
     public void Excluir_DisciplinaSemVinculos_ExcluiDisciplina()
     {
         // Arrange
-        var disciplina = new Disciplina("Matemática");
-        Mock<IRepositorioDisciplina> repositorioDisciplina = new();
-        Mock<IRepositorioMateria> repositorioMateria = new();
+        var disciplina = CriarDisciplina();
+        var (repositorioDisciplina, repositorioMateria, servicoDisciplina) = CriarServico();
         repositorioDisciplina.Setup(r => r.SelecionarPorId(disciplina.Id)).Returns(disciplina);
         repositorioMateria.ConfigurarSelecao();
-        ServicoDisciplina servicoDisciplina = new(repositorioDisciplina.Object, repositorioMateria.Object);
 
         // Act
         Result resultado = servicoDisciplina.Excluir(disciplina.Id);
@@ -139,12 +133,11 @@ public sealed class ServicoDisciplinaTests
     public void Excluir_DisciplinaComMateriasVinculadas_RetornaFalha()
     {
         // Arrange
-        var disciplina = new Disciplina("Matemática");
-        var repositorioDisciplina = new Mock<IRepositorioDisciplina>();
-        var repositorioMateria = new Mock<IRepositorioMateria>();
+        var disciplina = CriarDisciplina();
+        var materia = new Materia("Álgebra", 7, disciplina);
+        var (repositorioDisciplina, repositorioMateria, servicoDisciplina) = CriarServico();
         repositorioDisciplina.Setup(r => r.SelecionarPorId(disciplina.Id)).Returns(disciplina);
-        repositorioMateria.ConfigurarSelecao(new Materia("Álgebra", 7, disciplina));
-        ServicoDisciplina servicoDisciplina = new(repositorioDisciplina.Object, repositorioMateria.Object);
+        repositorioMateria.ConfigurarSelecao(materia);
 
         // Act
         Result resultado = servicoDisciplina.Excluir(disciplina.Id);
@@ -153,5 +146,29 @@ public sealed class ServicoDisciplinaTests
         Assert.IsTrue(resultado.IsFailed);
         Assert.Contains("matérias vinculadas", resultado.Errors.Single().Message);
         repositorioDisciplina.Verify(r => r.Excluir(disciplina.Id), Times.Never);
+    }
+
+    private static Disciplina CriarDisciplina(string nome = "Matemática")
+    {
+        return new Disciplina(nome);
+    }
+
+    private static CadastrarDisciplinaDto CriarDtoCadastro(string nome = "Matemática")
+    {
+        return new CadastrarDisciplinaDto(nome);
+    }
+
+    private static EditarDisciplinaDto CriarDtoEdicao(Guid id, string nome = "Matemática")
+    {
+        return new EditarDisciplinaDto(id, nome);
+    }
+
+    private static (Mock<IRepositorioDisciplina> repositorioDisciplina, Mock<IRepositorioMateria> repositorioMateria, ServicoDisciplina servicoDisciplina) CriarServico()
+    {
+        Mock<IRepositorioDisciplina> repositorioDisciplina = new();
+        Mock<IRepositorioMateria> repositorioMateria = new();
+        ServicoDisciplina servicoDisciplina = new(repositorioDisciplina.Object, repositorioMateria.Object);
+
+        return (repositorioDisciplina, repositorioMateria, servicoDisciplina);
     }
 }

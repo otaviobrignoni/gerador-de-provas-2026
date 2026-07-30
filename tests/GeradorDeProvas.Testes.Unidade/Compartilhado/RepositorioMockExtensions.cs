@@ -30,8 +30,13 @@ public static class RepositorioMockExtensions
         ConfigurarSelecao<IRepositorioProva, Prova>(repositorio, registros);
     }
 
-    private static void ConfigurarSelecao<TRepositorio, TEntidade>(Mock<TRepositorio> repositorio, IReadOnlyCollection<TEntidade> registros) where TRepositorio : class, IRepositorio<TEntidade> where TEntidade : EntidadeBase<TEntidade>
+    private static void ConfigurarSelecao<TRepositorio, TEntidade>(Mock<TRepositorio> repositorio, IReadOnlyCollection<TEntidade> registros)
+        where TRepositorio : class, IRepositorio<TEntidade>
+        where TEntidade : EntidadeBase<TEntidade>
     {
-        repositorio.Setup(r => r.SelecionarTodos(It.IsAny<Expression<Func<TEntidade, bool>>?>())).Returns((Expression<Func<TEntidade, bool>>? filtro) => [.. registros.Where(filtro?.Compile() ?? (_ => true))]);
+        repositorio
+            .Setup(r => r.SelecionarTodos(It.IsAny<Expression<Func<TEntidade, bool>>?>()))
+            .Returns((Expression<Func<TEntidade, bool>>? filtro) =>
+                [.. registros.Where(filtro?.Compile() ?? (_ => true))]);
     }
 }

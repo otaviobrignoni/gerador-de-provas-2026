@@ -16,14 +16,10 @@ public sealed class ServicoProvaTests
     public void Cadastrar_ConfiguracaoValida_CadastraProvaComQuestoesSelecionadas()
     {
         // Arrange
-        Disciplina disciplina = new("Matemática");
-        Materia materia = new("Álgebra", 7, disciplina);
-        Questao primeiraQuestao = new("Quanto é 2 + 2?", materia, [new Alternativa("4", true), new Alternativa("5", false)]);
-        Questao segundaQuestao = new("Quanto é 3 + 3?", materia, [new Alternativa("6", true), new Alternativa("7", false)]);
-        Mock<IRepositorioProva> repositorioProva = new();
-        Mock<IRepositorioDisciplina> repositorioDisciplina = new();
-        Mock<IRepositorioMateria> repositorioMateria = new();
-        Mock<IRepositorioQuestao> repositorioQuestao = new();
+        var (disciplina, materia, questoes, _) = CriarProva(2);
+        var primeiraQuestao = questoes[0];
+        var segundaQuestao = questoes[1];
+        var (repositorioProva, repositorioDisciplina, repositorioMateria, repositorioQuestao, servicoProva) = CriarServico();
         Prova? provaCadastrada = null;
         repositorioProva.ConfigurarSelecao();
         repositorioDisciplina.Setup(r => r.SelecionarPorId(disciplina.Id)).Returns(disciplina);
@@ -32,8 +28,7 @@ public sealed class ServicoProvaTests
         repositorioQuestao.ConfigurarSelecao(primeiraQuestao, segundaQuestao);
         repositorioProva.Setup(r => r.Cadastrar(It.IsAny<Prova>()))
             .Callback<Prova>(prova => provaCadastrada = prova);
-        ServicoProva servicoProva = new(repositorioProva.Object, repositorioDisciplina.Object, repositorioMateria.Object, repositorioQuestao.Object);
-        CadastrarProvaDto dto = new("Avaliação de Álgebra", disciplina.Id, materia.Id, 7, 2, false);
+        var dto = CriarDtoCadastro(disciplina, materia);
         List<Guid> questaoIds = [segundaQuestao.Id, primeiraQuestao.Id];
 
         // Act
@@ -56,16 +51,10 @@ public sealed class ServicoProvaTests
     public void Cadastrar_TituloDuplicado_RetornaFalha()
     {
         // Arrange
-        Disciplina disciplina = new("Matemática");
-        Materia materia = new("Álgebra", 7, disciplina);
-        Prova provaExistente = new("Avaliação de Álgebra", disciplina, materia, 7, 2, false);
-        Mock<IRepositorioProva> repositorioProva = new();
-        Mock<IRepositorioDisciplina> repositorioDisciplina = new();
-        Mock<IRepositorioMateria> repositorioMateria = new();
-        Mock<IRepositorioQuestao> repositorioQuestao = new();
+        var (disciplina, materia, _, provaExistente) = CriarProva(0);
+        var (repositorioProva, _, _, _, servicoProva) = CriarServico();
         repositorioProva.ConfigurarSelecao(provaExistente);
-        ServicoProva servicoProva = new(repositorioProva.Object, repositorioDisciplina.Object, repositorioMateria.Object, repositorioQuestao.Object);
-        CadastrarProvaDto dto = new(" AVALIAÇÃO DE ÁLGEBRA ", disciplina.Id, materia.Id, 7, 2, false);
+        var dto = CriarDtoCadastro(disciplina, materia, " AVALIAÇÃO DE ÁLGEBRA ");
 
         // Act
         Result resultado = servicoProva.Cadastrar(dto);
@@ -81,18 +70,14 @@ public sealed class ServicoProvaTests
     public void Cadastrar_MateriaDeOutraDisciplina_RetornaFalha()
     {
         // Arrange
-        Disciplina disciplina = new("Matemática");
-        Disciplina outraDisciplina = new("Geografia");
-        Materia materia = new("Relevo", 7, outraDisciplina);
-        Mock<IRepositorioProva> repositorioProva = new();
-        Mock<IRepositorioDisciplina> repositorioDisciplina = new();
-        Mock<IRepositorioMateria> repositorioMateria = new();
-        Mock<IRepositorioQuestao> repositorioQuestao = new();
+        var disciplina = new Disciplina("Matemática");
+        var outraDisciplina = new Disciplina("Geografia");
+        var materia = new Materia("Relevo", 7, outraDisciplina);
+        var (repositorioProva, repositorioDisciplina, repositorioMateria, _, servicoProva) = CriarServico();
         repositorioProva.ConfigurarSelecao();
         repositorioDisciplina.Setup(r => r.SelecionarPorId(disciplina.Id)).Returns(disciplina);
         repositorioMateria.Setup(r => r.SelecionarPorId(materia.Id)).Returns(materia);
-        ServicoProva servicoProva = new(repositorioProva.Object, repositorioDisciplina.Object, repositorioMateria.Object, repositorioQuestao.Object);
-        CadastrarProvaDto dto = new("Avaliação de Matemática", disciplina.Id, materia.Id, 7, 1, false);
+        var dto = CriarDtoCadastro(disciplina, materia, "Avaliação de Matemática", 1);
 
         // Act
         Result resultado = servicoProva.Cadastrar(dto);
@@ -108,24 +93,20 @@ public sealed class ServicoProvaTests
     public void Cadastrar_QuestoesForaDaConfiguracao_RetornaFalha()
     {
         // Arrange
-        Disciplina disciplina = new("Matemática");
-        Materia materia = new("Álgebra", 7, disciplina);
-        Materia outraMateria = new("Geometria", 7, disciplina);
-        Questao questaoForaDaConfiguracao = new("Qual é a área de um quadrado?", outraMateria, [
-            new Alternativa("Lado ao quadrado", true),
-            new Alternativa("Base vezes altura", false)
-        ]);
-        Mock<IRepositorioProva> repositorioProva = new();
-        Mock<IRepositorioDisciplina> repositorioDisciplina = new();
-        Mock<IRepositorioMateria> repositorioMateria = new();
-        Mock<IRepositorioQuestao> repositorioQuestao = new();
+        var (disciplina, materia, _, _) = CriarProva(0);
+        var outraMateria = new Materia("Geometria", 7, disciplina);
+        var questaoForaDaConfiguracao = new Questao(
+            "Qual é a área de um quadrado?",
+            outraMateria,
+            CriarAlternativas("Lado ao quadrado", "Base vezes altura")
+        );
+        var (repositorioProva, repositorioDisciplina, repositorioMateria, repositorioQuestao, servicoProva) = CriarServico();
         repositorioProva.ConfigurarSelecao();
         repositorioDisciplina.Setup(r => r.SelecionarPorId(disciplina.Id)).Returns(disciplina);
         repositorioMateria.Setup(r => r.SelecionarPorId(materia.Id)).Returns(materia);
         repositorioMateria.ConfigurarSelecao(materia, outraMateria);
         repositorioQuestao.ConfigurarSelecao(questaoForaDaConfiguracao);
-        ServicoProva servicoProva = new(repositorioProva.Object, repositorioDisciplina.Object, repositorioMateria.Object, repositorioQuestao.Object);
-        CadastrarProvaDto dto = new("Avaliação de Álgebra", disciplina.Id, materia.Id, 7, 1, false);
+        var dto = CriarDtoCadastro(disciplina, materia, quantidadeQuestoes: 1);
 
         // Act
         Result resultado = servicoProva.Cadastrar(dto, [questaoForaDaConfiguracao.Id]);
@@ -141,23 +122,17 @@ public sealed class ServicoProvaTests
     public void Duplicar_ProvaExistente_CadastraCopiaComNovoTitulo()
     {
         // Arrange
-        Disciplina disciplina = new("Matemática");
-        Materia materia = new("Álgebra", 7, disciplina);
-        Questao questao = new("Quanto é 2 + 2?", materia, [new Alternativa("4", true), new Alternativa("5", false)]);
-        Prova provaOriginal = new("Avaliação de Álgebra", disciplina, materia, 7, 2, false, [questao]);
-        Mock<IRepositorioProva> repositorioProva = new();
-        Mock<IRepositorioDisciplina> repositorioDisciplina = new();
-        Mock<IRepositorioMateria> repositorioMateria = new();
-        Mock<IRepositorioQuestao> repositorioQuestao = new();
+        var (disciplina, materia, _, provaOriginal) = CriarProva();
+        var dto = CriarDtoDuplicacao(provaOriginal);
+        var (repositorioProva, _, _, _, servicoProva) = CriarServico();
         Prova? provaDuplicada = null;
         repositorioProva.ConfigurarSelecao(provaOriginal);
         repositorioProva.Setup(r => r.SelecionarPorId(provaOriginal.Id)).Returns(provaOriginal);
         repositorioProva.Setup(r => r.Cadastrar(It.IsAny<Prova>()))
             .Callback<Prova>(prova => provaDuplicada = prova);
-        ServicoProva servicoProva = new(repositorioProva.Object, repositorioDisciplina.Object, repositorioMateria.Object, repositorioQuestao.Object);
 
         // Act
-        Result resultado = servicoProva.Duplicar(new DuplicarProvaDto(provaOriginal.Id, "Segunda Avaliação de Álgebra"));
+        Result resultado = servicoProva.Duplicar(dto);
 
         // Assert
         Assert.IsTrue(resultado.IsSuccess);
@@ -179,12 +154,8 @@ public sealed class ServicoProvaTests
     {
         // Arrange
         Guid provaId = Guid.CreateVersion7();
-        Mock<IRepositorioProva> repositorioProva = new();
-        Mock<IRepositorioDisciplina> repositorioDisciplina = new();
-        Mock<IRepositorioMateria> repositorioMateria = new();
-        Mock<IRepositorioQuestao> repositorioQuestao = new();
+        var (repositorioProva, _, _, _, servicoProva) = CriarServico();
         repositorioProva.Setup(r => r.Excluir(provaId)).Returns(false);
-        ServicoProva servicoProva = new(repositorioProva.Object, repositorioDisciplina.Object, repositorioMateria.Object, repositorioQuestao.Object);
 
         // Act
         Result resultado = servicoProva.Excluir(provaId);
@@ -193,5 +164,47 @@ public sealed class ServicoProvaTests
         Assert.IsTrue(resultado.IsFailed);
         Assert.Contains("Prova não encontrada", resultado.Errors.Single().Message);
         repositorioProva.Verify(r => r.Excluir(provaId), Times.Once);
+    }
+
+    private static (Disciplina disciplina, Materia materia, List<Questao> questoes, Prova prova) CriarProva(int quantidadeQuestoesCriadas = 1)
+    {
+        if (quantidadeQuestoesCriadas < 0)
+            throw new ArgumentOutOfRangeException(nameof(quantidadeQuestoesCriadas), "A quantidade deve ser maior ou igual a zero.");
+
+        var disciplina = new Disciplina("Matemática");
+        var materia = new Materia("Álgebra", 7, disciplina);
+        var questoes = Enumerable
+            .Range(1, quantidadeQuestoesCriadas)
+            .Select(i => new Questao($"Quanto é {i + 1} + {i + 1}?", materia, CriarAlternativas($"{(i + 1) * 2}", $"{(i + 1) * 2 + 1}")))
+            .ToList();
+        var prova = new Prova("Avaliação de Álgebra", disciplina, materia, 7, 2, false, questoes);
+
+        return (disciplina, materia, questoes, prova);
+    }
+
+    private static List<Alternativa> CriarAlternativas(string primeiroTexto = "4", string segundoTexto = "5", bool primeiraCorreta = true)
+    {
+        return [new Alternativa(primeiroTexto, primeiraCorreta), new Alternativa(segundoTexto, !primeiraCorreta)];
+    }
+
+    private static CadastrarProvaDto CriarDtoCadastro(Disciplina disciplina, Materia materia, string titulo = "Avaliação de Álgebra", int quantidadeQuestoes = 2)
+    {
+        return new CadastrarProvaDto(titulo, disciplina.Id, materia.Id, 7, quantidadeQuestoes, false);
+    }
+
+    private static DuplicarProvaDto CriarDtoDuplicacao(Prova prova)
+    {
+        return new DuplicarProvaDto(prova.Id, "Segunda Avaliação de Álgebra");
+    }
+
+    private static (Mock<IRepositorioProva> repositorioProva, Mock<IRepositorioDisciplina> repositorioDisciplina, Mock<IRepositorioMateria> repositorioMateria, Mock<IRepositorioQuestao> repositorioQuestao, ServicoProva servicoProva) CriarServico()
+    {
+        Mock<IRepositorioProva> repositorioProva = new();
+        Mock<IRepositorioDisciplina> repositorioDisciplina = new();
+        Mock<IRepositorioMateria> repositorioMateria = new();
+        Mock<IRepositorioQuestao> repositorioQuestao = new();
+        ServicoProva servicoProva = new(repositorioProva.Object, repositorioDisciplina.Object, repositorioMateria.Object, repositorioQuestao.Object);
+
+        return (repositorioProva, repositorioDisciplina, repositorioMateria, repositorioQuestao, servicoProva);
     }
 }
