@@ -1,10 +1,12 @@
-using GeradorDeProvas.Infra.Compartilhado.Logging;
-using GeradorDeProvas.Infra.Compartilhado.Orm;
 using GeradorDeProvas.Dominio.ModuloDisciplina;
 using GeradorDeProvas.Dominio.ModuloMateria;
+using GeradorDeProvas.Dominio.ModuloProva;
 using GeradorDeProvas.Dominio.ModuloQuestao;
+using GeradorDeProvas.Infra.Compartilhado.Logging;
+using GeradorDeProvas.Infra.Compartilhado.Orm;
 using GeradorDeProvas.Infra.ModuloDisciplina;
 using GeradorDeProvas.Infra.ModuloMateria;
+using GeradorDeProvas.Infra.ModuloProva;
 using GeradorDeProvas.Infra.ModuloQuestao;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -17,11 +19,7 @@ namespace GeradorDeProvas.Infra;
 
 public static class InjecaoDeDependencia
 {
-    public static void AddInfraRepositories(
-        this IServiceCollection services,
-        IConfiguration configuration,
-        ILoggingBuilder logging
-    )
+    public static void AddInfraRepositories(this IServiceCollection services, IConfiguration configuration, ILoggingBuilder logging)
     {
         // Injeta logs do Serilog
         Log.Logger = SerilogFactory.Create(configuration);
@@ -36,16 +34,9 @@ public static class InjecaoDeDependencia
             string? connectionString = configuration.GetConnectionString("SqlServerEF");
 
             if (string.IsNullOrWhiteSpace(connectionString))
-            {
-                throw new InvalidOperationException(
-                    $"A connection string \"SqlServerEF\" não foi encontrada."
-                );
-            }
+                throw new InvalidOperationException($"A connection string \"SqlServerEF\" não foi encontrada.");
 
-            options.UseSqlServer(connectionString, opt =>
-            {
-                opt.EnableRetryOnFailure(3);
-            });
+            options.UseSqlServer(connectionString, opt => opt.EnableRetryOnFailure(3));
         });
 
         // Configuração do Usuário no Identity
@@ -70,5 +61,6 @@ public static class InjecaoDeDependencia
         services.AddScoped<IRepositorioDisciplina, RepositorioDisciplina>();
         services.AddScoped<IRepositorioMateria, RepositorioMateria>();
         services.AddScoped<IRepositorioQuestao, RepositorioQuestao>();
+        services.AddScoped<IRepositorioProva, RepositorioProva>();
     }
 }
