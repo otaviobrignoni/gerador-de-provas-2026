@@ -228,3 +228,11 @@ O arquivo PDF do gabarito deve apresentar:
 ## Requisitos
 
 - [.NET 10.0 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+
+## Licenças de fontes
+
+Este projeto distribui a fonte JetBrains Mono para geração de PDFs.
+
+- Fonte: [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono)
+- Licença: SIL Open Font License 1.1 (OFL-1.1)
+- Texto da licença no repositório: [LICENSES/JetBrainsMono-OFL.txt](LICENSES/JetBrainsMono-OFL.txt)

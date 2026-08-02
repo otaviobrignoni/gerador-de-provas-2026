@@ -4,6 +4,7 @@ using GeradorDeProvas.Infra.Compartilhado.Orm;
 using GeradorDeProvas.WebApp.Compartilhado;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using QuestPDF.Infrastructure;
 
 namespace GeradorDeProvas.WebApp;
 
@@ -11,6 +12,9 @@ public partial class Program
 {
     private static void Main(string[] args)
     {
+        QuestPDF.Settings.License = LicenseType.Community;
+        QuestPDF.Settings.UseEnvironmentFonts = false;
+
         var builder = WebApplication.CreateBuilder(args);
 
         // Configuração do container de injeção de dependência

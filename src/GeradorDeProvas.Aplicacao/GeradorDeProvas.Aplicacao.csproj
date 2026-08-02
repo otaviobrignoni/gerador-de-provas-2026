@@ -11,10 +11,15 @@
 
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.9" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.9" />
+    <PackageReference Include="QuestPDF" Version="2026.7.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\GeradorDeProvas.Dominio\GeradorDeProvas.Dominio.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Fonts/*.ttf" />
   </ItemGroup>
 
 </Project>
