@@ -26,9 +26,9 @@ public abstract class RepositorioBaseTests
     public void InicializarContexto()
     {
         var opt = new DbContextOptionsBuilder<GeradorDeProvasDbContext>()
-            .UseInMemoryDatabase($"integracao-{Guid.NewGuid():N}")
+            .UseInMemoryDatabase($"integracao-{Guid.CreateVersion7():N}")
             .Options;
-        dbContext = new GeradorDeProvasDbContext(opt, new FalsoProvedorDeUsuario(Guid.NewGuid()));
+        dbContext = new GeradorDeProvasDbContext(opt, new FalsoProvedorDeUsuario(Guid.CreateVersion7()));
 
         repositorioDisciplina = new(dbContext);
         BuilderSetup.SetCreatePersistenceMethod<Disciplina>(repositorioDisciplina.Cadastrar);

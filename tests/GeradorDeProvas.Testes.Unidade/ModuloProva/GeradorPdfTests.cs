@@ -91,20 +91,20 @@ public sealed class GeradorPdfTests
         string longo = $"comprimento l{new string('o', 50)}ngo";
         string enunciado = textoLongo ? longo : normal;
         List<QuestaoProvaDto> questoes = [.. Enumerable.Range(1, quantidadeQuestoes).Select(indice => new QuestaoProvaDto(
-            Guid.NewGuid(),
+            Guid.CreateVersion7(),
             $"Questão {indice}: {enunciado}",
             [
-                new AlternativaProvaDto(Guid.NewGuid(), "Alternativa correta com acentuação", true),
-                new AlternativaProvaDto(Guid.NewGuid(), "Alternativa incorreta", false)
+                new AlternativaProvaDto(Guid.CreateVersion7(), "Alternativa correta com acentuação", true),
+                new AlternativaProvaDto(Guid.CreateVersion7(), "Alternativa incorreta", false)
             ]
         ))];
 
         return new DetalhesProvaDto(
-            Guid.NewGuid(),
+            Guid.CreateVersion7(),
             "Avaliação de Matemática",
-            Guid.NewGuid(),
+            Guid.CreateVersion7(),
             "Matemática",
-            Guid.NewGuid(),
+            Guid.CreateVersion7(),
             "Álgebra",
             7,
             quantidadeQuestoes,

@@ -18,7 +18,7 @@ public sealed class TestApplicationFactory : WebApplicationFactory<Program>
 
     public TestApplicationFactory()
     {
-        dbName = $"e2e-{Guid.NewGuid():N}";
+        dbName = $"e2e-{Guid.CreateVersion7():N}";
 
         UseKestrel(0);
         StartServer();

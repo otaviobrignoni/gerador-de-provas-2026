@@ -97,7 +97,7 @@ public sealed class ServicoDisciplinaTests
     public void Editar_DisciplinaInexistente_RetornaFalha()
     {
         // Arrange
-        var disciplinaId = Guid.NewGuid();
+        var disciplinaId = Guid.CreateVersion7();
         var dto = CriarDtoEdicao(disciplinaId);
         var (repositorioDisciplina, _, servicoDisciplina) = CriarServico();
         repositorioDisciplina.ConfigurarSelecao();
