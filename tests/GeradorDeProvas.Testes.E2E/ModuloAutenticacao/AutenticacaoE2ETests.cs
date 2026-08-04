@@ -1,7 +1,7 @@
 ﻿using GeradorDeProvas.Testes.E2E.Compartilhado;
 using Microsoft.Playwright;
 
-namespace GeradorDeProvas.Testes.E2E;
+namespace GeradorDeProvas.Testes.E2E.ModuloAutenticacao;
 
 [TestClass]
 public sealed class AutenticacaoE2ETests : E2ETestsBase
