@@ -12,9 +12,9 @@ public class ServicoDisciplina(IRepositorioDisciplina repositorioDisciplina, IRe
         if (ExisteDisciplinaComMesmoNome(dto.Nome))
             return Falha(nameof(dto.Nome), "Já existe uma disciplina com este nome.");
 
-        Disciplina novaDisciplina = dto.ParaEntidade();
+        var novaDisciplina = dto.ParaEntidade();
 
-        Result resultadoValidacao = ValidarEntidade(novaDisciplina);
+        var resultadoValidacao = ValidarEntidade(novaDisciplina);
 
         if (resultadoValidacao.IsFailed)
             return resultadoValidacao;
@@ -29,24 +29,22 @@ public class ServicoDisciplina(IRepositorioDisciplina repositorioDisciplina, IRe
         if (ExisteDisciplinaComMesmoNome(dto.Nome, dto.Id))
             return Falha(nameof(dto.Nome), "Já existe uma disciplina com este nome.");
 
-        Disciplina disciplinaAtualizada = dto.ParaEntidade();
+        var disciplinaAtualizada = dto.ParaEntidade();
 
-        Result resultadoValidacao = ValidarEntidade(disciplinaAtualizada);
+        var resultadoValidacao = ValidarEntidade(disciplinaAtualizada);
 
         if (resultadoValidacao.IsFailed)
             return resultadoValidacao;
 
-        bool conseguiuEditar = repositorioDisciplina.Editar(dto.Id, disciplinaAtualizada);
-
-        if (!conseguiuEditar)
-            return Falha(string.Empty, "Disciplina não encontrada.");
+        if (!repositorioDisciplina.Editar(dto.Id, disciplinaAtualizada))
+            return Result.Fail("Disciplina não encontrada.");
 
         return Result.Ok();
     }
 
     public Result Excluir(Guid id)
     {
-        Disciplina? disciplina = repositorioDisciplina.SelecionarPorId(id);
+        var disciplina = repositorioDisciplina.SelecionarPorId(id);
 
         if (disciplina == null)
             return Falha(string.Empty, "Disciplina não encontrada.");
@@ -66,28 +64,17 @@ public class ServicoDisciplina(IRepositorioDisciplina repositorioDisciplina, IRe
 
     public Result<DetalhesDisciplinaDto> SelecionarPorId(Guid id)
     {
-        Disciplina? disciplina = repositorioDisciplina.SelecionarPorId(id);
+        var disciplina = repositorioDisciplina.SelecionarPorId(id);
 
-        if (disciplina == null)
+        if (disciplina is null)
             return Result.Fail("Disciplina não encontrada.");
 
         return Result.Ok(disciplina.ParaDetalhesDto());
     }
 
-    private bool ExisteDisciplinaComMesmoNome(string nome, Guid? idIgnorado = null)
-    {
-        string nomeNormalizado = nome.Normalizar();
+    private bool ExisteDisciplinaComMesmoNome(string nome, Guid idIgnorado = default) =>
+            repositorioDisciplina.SelecionarTodos(d => d.Id != idIgnorado && d.Nome.Normalizar().Equals(nome.Normalizar())).Count != 0;
 
-        return repositorioDisciplina
-            .SelecionarTodos(d => (!idIgnorado.HasValue || d.Id != idIgnorado.Value)
-                && d.Nome.Trim().ToLower() == nomeNormalizado)
-            .Any();
-    }
-
-    private bool PossuiMateriasVinculadas(Guid disciplinaId)
-    {
-        return repositorioMateria
-            .SelecionarTodos(m => m.Disciplina.Id == disciplinaId)
-            .Any();
-    }
+    private bool PossuiMateriasVinculadas(Guid disciplinaId) =>
+        repositorioMateria.SelecionarTodos(m => m.Disciplina.Id == disciplinaId).Count != 0;
 }

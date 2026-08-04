@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
 
@@ -19,14 +20,14 @@ namespace GeradorDeProvas.Infra;
 
 public static class InjecaoDeDependencia
 {
-    public static void AddInfraRepositories(this IServiceCollection services, IConfiguration configuration, ILoggingBuilder logging)
+    public static void AddInfraRepositories(this IServiceCollection services, IConfiguration configuration, ILoggingBuilder logging, IHostEnvironment env)
     {
         // Injeta logs do Serilog
-        Log.Logger = SerilogFactory.Create(configuration);
+        Serilog.ILogger logger = SerilogFactory.Create(configuration, env);
 
         logging.ClearProviders();
 
-        services.AddSerilog(Log.Logger);
+        services.AddSerilog(logger, true);
 
         // Injeta o DbContext do EF
         services.AddDbContext<GeradorDeProvasDbContext>(options =>
