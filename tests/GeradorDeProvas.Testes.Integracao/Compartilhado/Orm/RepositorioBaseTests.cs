@@ -26,7 +26,7 @@ public abstract class RepositorioBaseTests
     public void InicializarContexto()
     {
         var opt = new DbContextOptionsBuilder<GeradorDeProvasDbContext>()
-            .UseInMemoryDatabase("GeradorDeProvasTestDB_Memory")
+            .UseInMemoryDatabase($"integracao-{Guid.NewGuid():N}")
             .Options;
         dbContext = new GeradorDeProvasDbContext(opt, new FalsoProvedorDeUsuario(Guid.NewGuid()));
 

@@ -1,0 +1,3 @@
+{
+  "dotnet.unitTests.runSettingsPath": "tests/GeradorDeProvas.Testes.E2E/playwright.runsettings"
+}

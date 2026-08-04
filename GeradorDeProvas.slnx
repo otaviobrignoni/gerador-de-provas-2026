@@ -6,6 +6,7 @@
     <Project Path="src/GeradorDeProvas.WebApp/GeradorDeProvas.WebApp.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/GeradorDeProvas.Testes.E2E/GeradorDeProvas.Testes.E2E.csproj" />
     <Project Path="tests/GeradorDeProvas.Testes.Integracao/GeradorDeProvas.Testes.Integracao.csproj" />
     <Project Path="tests/GeradorDeProvas.Testes.Unidade/GeradorDeProvas.Testes.Unidade.csproj" />
   </Folder>
