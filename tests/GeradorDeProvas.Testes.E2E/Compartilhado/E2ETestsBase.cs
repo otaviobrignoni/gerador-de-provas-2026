@@ -1,3 +1,4 @@
+using GeradorDeProvas.Testes.E2E.ModuloAutenticacao;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Playwright;
@@ -56,10 +57,10 @@ public abstract class E2ETestsBase : PageTest
     {
         await RegistrarUsuarioAsync(email, senha);
 
-        await Page.GotoAsync($"{Url}/Autenticacao/Entrar");
-        await Page.GetByLabel("E-mail").FillAsync(email);
-        await Page.GetByLabel("Senha", new() { Exact = true }).FillAsync(senha);
+        EntrarPage entrarPage = new(Page, Url);
 
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Entrar" }).ClickAsync();
+        await entrarPage.IrParaAsync();
+        await entrarPage.PreencherAsync(email, senha);
+        await entrarPage.ConfirmarAsync();
     }
 }

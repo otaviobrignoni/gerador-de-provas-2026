@@ -1,5 +1,4 @@
 ﻿using GeradorDeProvas.Testes.E2E.Compartilhado;
-using Microsoft.Playwright;
 
 namespace GeradorDeProvas.Testes.E2E.ModuloAutenticacao;
 
@@ -9,11 +8,15 @@ public sealed class AutenticacaoE2ETests : E2ETestsBase
     [TestMethod]
     public async Task Deve_Exibir_TelaDeLogin_ParaUsuarioAnonimo()
     {
+        // Arrange
+        EntrarPage entrarPage = new(Page, Url);
+
         // Act
-        await Page.GotoAsync($"{Url}/");
+        await entrarPage.IrParaAsync();
 
         // Assert
-        await Expect(Page).ToHaveTitleAsync(new Regex("Entrar"));
+        await Expect(Page).ToHaveURLAsync(entrarPage.Url);
+        await Expect(entrarPage.Titulo).ToBeVisibleAsync();
     }
 
     [TestMethod]
@@ -23,20 +26,17 @@ public sealed class AutenticacaoE2ETests : E2ETestsBase
         const string email = "novo.usuario@teste.local";
         const string senha = "Senha123!";
 
-        await Page.GotoAsync($"{Url}/Autenticacao/Registrar");
+        RegistrarPage registrarPage = new(Page, Url);
 
         // Act
-        await Page.GetByLabel("E-mail").FillAsync(email);
-        await Page.GetByLabel("Senha", new() { Exact = true }).FillAsync(senha);
-        await Page.GetByLabel("Confirmar Senha").FillAsync(senha);
-
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Criar Conta" }).ClickAsync();
+        await registrarPage.IrParaAsync();
+        await registrarPage.PreencherAsync(email, senha);
+        await registrarPage.ConfirmarAsync();
 
         // Assert
-        string rotaAbsoluta = new Uri(Page.Url).AbsolutePath;
-
-        Assert.AreEqual("/", rotaAbsoluta);
+        await Expect(Page).ToHaveURLAsync($"{Url}/");
     }
+
     [TestMethod]
     public async Task Deve_EntrarEAutenticar_Usuario_Valido()
     {
@@ -46,18 +46,15 @@ public sealed class AutenticacaoE2ETests : E2ETestsBase
 
         await RegistrarUsuarioAsync(email, senha);
 
-        // Act
-        await Page.GotoAsync($"{Url}/Autenticacao/Entrar");
-        await Page.GetByLabel("E-mail").FillAsync(email);
-        await Page.GetByLabel("Senha", new() { Exact = true }).FillAsync(senha);
+        EntrarPage entrarPage = new(Page, Url);
 
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Entrar" }).ClickAsync();
+        // Act
+        await entrarPage.IrParaAsync();
+        await entrarPage.PreencherAsync(email, senha);
+        await entrarPage.ConfirmarAsync();
 
         // Assert
-        string rotaAbsoluta = new Uri(Page.Url).AbsolutePath;
-
-        Assert.AreEqual("/", rotaAbsoluta);
-
-        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = email })).ToBeVisibleAsync();
+        await Expect(Page).ToHaveURLAsync($"{Url}/");
+        await Expect(entrarPage.UsuarioAutenticado(email)).ToBeVisibleAsync();
     }
 }
