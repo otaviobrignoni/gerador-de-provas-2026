@@ -1,33 +1,35 @@
 @{
-    Layout = "_Layout";
-    ViewBag.Titulo = "Página Inicial";
+  Layout = "_Layout";
+  ViewBag.Titulo = "Página Inicial";
+  string moduleListClasses = "list-group-item list-group-item-action d-flex justify-content-between align-items-center";
+  string listOpenButtonClasses = "badge text-bg-primary rounded-pill";
+  string moduleButtonClasses = "btn btn-primary rounded-pill px-4";
 }
 
 <div class="row g-2">
-    <div class="col-lg-7">
-        <h1 class="display-5 fw-semibold mb-3">Gerador De Provas</h1>
-        <p class="lead text-secondary mb-4">
-            Gerencie material para estudo e provas para turbinar o estudo de seus alunos.
-        </p>
-
-        <div class="d-flex flex-wrap gap-2">
-            @* <a class="btn btn-primary rounded-pill px-4" asp-controller="Entidade" asp-action="Listar">Entidades</a> *@
-        </div>
-
+  <div class="col-lg-7">
+    <h1 class="display-5 fw-semibold mb-3">Gerador De Provas</h1>
+    <p class="lead text-secondary mb-4">
+      Gerencie material para estudo e provas para turbinar o estudo de seus alunos.
+    </p>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="@moduleButtonClasses" asp-controller="Disciplina" asp-action="Listar">Disciplinas</a>
+      <a class="@moduleButtonClasses" asp-controller="Materia" asp-action="Listar">Materia</a>
+      <a class="@moduleButtonClasses" asp-controller="Questao" asp-action="Listar">Questões</a>
+      <a class="@moduleButtonClasses" asp-controller="Prova" asp-action="Listar">Provas</a>
     </div>
-
-    <div class="col-lg-5">
-        <div class="card border-primary-subtle shadow-sm">
-            <div class="card-body p-4">
-                <h3 class="h5 text-primary mb-3">Módulos disponíveis</h3>
-
-                <div class="list-group">
-                    @* <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" asp-controller="Entidade" asp-action="Listar">
-                        Controle de Entidades
-                        <span class="badge text-bg-primary rounded-pill">Abrir</span>
-                    </a> *@
-                </div>
-            </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card border-primary-subtle shadow-sm">
+      <div class="card-body p-4">
+        <h3 class="h5 text-primary mb-3">Módulos disponíveis</h3>
+        <div class="list-group">
+          <a class="@moduleListClasses" asp-controller="Disciplina" asp-action="Listar"> Controle de Disciplinas <span class="@listOpenButtonClasses">Abrir</span> </a>
+          <a class="@moduleListClasses" asp-controller="Materia" asp-action="Listar"> Controle de Materias <span class="@listOpenButtonClasses">Abrir</span> </a>
+          <a class="@moduleListClasses" asp-controller="Questao" asp-action="Listar"> Controle de Questões <span class="@listOpenButtonClasses">Abrir</span> </a>
+          <a class="@moduleListClasses" asp-controller="Prova" asp-action="Listar"> Controle de Provas <span class="@listOpenButtonClasses">Abrir</span> </a>
         </div>
+      </div>
     </div>
+  </div>
 </div>
