@@ -1,5 +1,4 @@
 using GeradorDeProvas.Testes.E2E.Compartilhado;
-using Microsoft.Playwright;
 
 namespace GeradorDeProvas.Testes.E2E.ModuloDisciplina;
 
@@ -11,15 +10,16 @@ public sealed class DisciplinaE2ETests : E2ETestsBase
     {
         // Arrange
         await RegistrarEEntrarAsync("disciplina.listagem@teste.local", "Senha123!");
+        DisciplinaListarPage listarPage = new(Page, Url);
 
         // Act
-        await Page.GotoAsync($"{Url}/Disciplina/Listar");
+        await listarPage.IrParaAsync();
 
         // Assert
-        Assert.AreEqual("/Disciplina/Listar", new Uri(Page.Url).AbsolutePath);
-        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Listagem de Disciplinas" })).ToBeVisibleAsync();
-        await Expect(Page.GetByRole(AriaRole.Link, new() { Name = "Cadastrar Nova" })).ToBeVisibleAsync();
-        await Expect(Page.GetByText("Nenhuma disciplina cadastrada.", new() { Exact = true })).ToBeVisibleAsync();
+        await Expect(Page).ToHaveURLAsync(listarPage.Url);
+        await Expect(listarPage.Titulo).ToBeVisibleAsync();
+        await Expect(listarPage.CadastarNova).ToBeVisibleAsync();
+        await Expect(listarPage.EstadoVazio).ToBeVisibleAsync();
     }
 
     [TestMethod]
@@ -27,17 +27,19 @@ public sealed class DisciplinaE2ETests : E2ETestsBase
     {
         // Arrange
         await RegistrarEEntrarAsync("disciplina.cadastro@teste.local", "Senha123!");
-        await Page.GotoAsync($"{Url}/Disciplina/Listar");
+
+        DisciplinaFormPage formPage = new(Page, Url);
+        DisciplinaListarPage listarPage = new(Page, Url);
 
         // Act
-        await Page.GetByRole(AriaRole.Link, new() { Name = "Cadastrar Nova" }).ClickAsync();
-        await Page.GetByLabel("Nome").FillAsync("Matemática");
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Confirmar" }).ClickAsync();
+        await formPage.IrParaCadastroAsync();
+        await formPage.PreencherNomeAsync("Matemática");
+        await formPage.ConfirmarAsync();
 
         // Assert
-        Assert.AreEqual("/Disciplina/Listar", new Uri(Page.Url).AbsolutePath);
-        await Expect(Page.GetByText("Matemática", new() { Exact = true })).ToBeVisibleAsync();
-        await Expect(Page.GetByText("Nenhuma disciplina cadastrada.", new() { Exact = true })).Not.ToBeVisibleAsync();
+        await Expect(Page).ToHaveURLAsync(listarPage.Url);
+        await Expect(listarPage.NomeDaDisciplina("Matemática")).ToBeVisibleAsync();
+        await Expect(listarPage.EstadoVazio).Not.ToBeVisibleAsync();
     }
 
     [TestMethod]
@@ -47,17 +49,19 @@ public sealed class DisciplinaE2ETests : E2ETestsBase
         await RegistrarEEntrarAsync("disciplina.edicao@teste.local", "Senha123!");
         await CadastrarDisciplinaAsync("Matemática");
 
-        ILocator card = Page.Locator(".card").Filter(new() { HasText = "Matemática" });
-        await card.GetByRole(AriaRole.Link, new() { Name = "Editar", Exact = true }).ClickAsync();
+        DisciplinaFormPage formPage = new(Page, Url);
+        DisciplinaListarPage listarPage = new(Page, Url);
+
+        await listarPage.EditarAsync("Matemática");
 
         // Act
-        await Page.GetByLabel("Nome").FillAsync("História do Brasil");
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Confirmar" }).ClickAsync();
+        await formPage.PreencherNomeAsync("História do Brasil");
+        await formPage.ConfirmarAsync();
 
         // Assert
-        Assert.AreEqual("/Disciplina/Listar", new Uri(Page.Url).AbsolutePath);
-        await Expect(Page.GetByText("História do Brasil", new() { Exact = true })).ToBeVisibleAsync();
-        await Expect(Page.GetByText("Matemática", new() { Exact = true })).Not.ToBeVisibleAsync();
+        await Expect(Page).ToHaveURLAsync(listarPage.Url);
+        await Expect(listarPage.NomeDaDisciplina("História do Brasil")).ToBeVisibleAsync();
+        await Expect(listarPage.NomeDaDisciplina("Matemática")).Not.ToBeVisibleAsync();
     }
 
     [TestMethod]
@@ -67,26 +71,32 @@ public sealed class DisciplinaE2ETests : E2ETestsBase
         await RegistrarEEntrarAsync("disciplina.exlusao@teste.local", "Senha123!");
         await CadastrarDisciplinaAsync("Matemática");
 
-        ILocator card = Page.Locator(".card").Filter(new() { HasText = "Matemática" });
-        await card.GetByRole(AriaRole.Link, new() { Name = "Excluir", Exact = true }).ClickAsync();
+        DisciplinaListarPage listarPage = new(Page, Url);
+        DisciplinaExcluirPage excluirPage = new(Page);
+
+        await listarPage.ExcluirAsync("Matemática");
 
         // Act
-        await Expect(Page.GetByText("Deseja realmente excluir esta disciplina?", new() { Exact = true })).ToBeVisibleAsync();
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Confirmar" }).ClickAsync();
+        await Expect(Page).ToHaveURLAsync(new Regex($"{Regex.Escape(Url)}/Disciplina/Excluir/.*"));
+        await Expect(excluirPage.MensagemConfirmacao).ToBeVisibleAsync();
+        await excluirPage.ConfirmarAsync();
 
         // Assert
-        Assert.AreEqual("/Disciplina/Listar", new Uri(Page.Url).AbsolutePath);
-        await Expect(Page.GetByText("Matemática", new() { Exact = true })).Not.ToBeVisibleAsync();
-        await Expect(Page.GetByText("Nenhuma disciplina cadastrada.", new() { Exact = true })).ToBeVisibleAsync();
+        await Expect(Page).ToHaveURLAsync(listarPage.Url);
+        await Expect(listarPage.NomeDaDisciplina("Matemática")).Not.ToBeVisibleAsync();
+        await Expect(listarPage.EstadoVazio).ToBeVisibleAsync();
     }
 
     private async Task CadastrarDisciplinaAsync(string nome)
     {
-        await Page.GotoAsync($"{Url}/Disciplina/Cadastrar");
+        DisciplinaFormPage formPage = new(Page, Url);
 
-        await Page.GetByLabel("Nome").FillAsync(nome);
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Confirmar" }).ClickAsync();
+        await formPage.IrParaCadastroAsync();
+        await formPage.PreencherNomeAsync(nome);
+        await formPage.ConfirmarAsync();
 
-        await Expect(Page.GetByText(nome, new() { Exact = true })).ToBeVisibleAsync();
+        DisciplinaListarPage listarPage = new(Page, Url);
+
+        await Expect(Page).ToHaveURLAsync(listarPage.Url);
     }
 }
