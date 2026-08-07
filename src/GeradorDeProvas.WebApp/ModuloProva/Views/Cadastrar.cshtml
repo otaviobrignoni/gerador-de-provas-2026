@@ -1,0 +1,42 @@
+@{
+    Layout = "_Layout";
+    ViewBag.Titulo = "Geração de Prova - Etapa 1";
+}
+
+@model CadastrarProvaEtapa1ViewModel
+
+<form class="card border-primary-subtle shadow-sm mx-auto p-4" style="max-width: 780px;" asp-action="Cadastrar" method="post">
+    <div asp-validation-summary="All" class="text-danger small fw-semibold mb-3"></div>
+
+    <h5 class="text-primary mb-3">Configuração da prova</h5>
+    <p class="text-secondary small">Informe os dados básicos da prova para avançar à seleção das questões.</p>
+
+    <div class="mb-3">
+        <label asp-for="Titulo" class="form-label fw-semibold text-primary text-uppercase small">Título</label>
+        <input asp-for="Titulo" class="form-control">
+        <span asp-validation-for="Titulo" class="text-danger small fw-semibold"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="DisciplinaId" class="form-label fw-semibold text-primary text-uppercase small">Disciplina</label>
+        <select asp-for="DisciplinaId" asp-items="ViewBag.Disciplinas" class="form-select">
+            <option value="">Selecione uma disciplina</option>
+        </select>
+        <span asp-validation-for="DisciplinaId" class="text-danger small fw-semibold"></span>
+    </div>
+
+    <div class="mb-4">
+        <label asp-for="Serie" class="form-label fw-semibold text-primary text-uppercase small">Série</label>
+        <input asp-for="Serie" class="form-control" type="number" min="1">
+        <span asp-validation-for="Serie" class="text-danger small fw-semibold"></span>
+    </div>
+
+    <div class="form-check mb-4">
+        <input asp-for="ProvaRecuperacao" class="form-check-input">
+        <label asp-for="ProvaRecuperacao" class="form-check-label">Prova de recuperação (todas as matérias)</label>
+    </div>
+
+    <div class="d-flex justify-content-end">
+        <button class="btn btn-primary rounded-pill px-4" type="submit">Continuar</button>
+    </div>
+</form>

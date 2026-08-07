@@ -1,0 +1,55 @@
+@{
+    Layout = "_Layout";
+    ViewBag.Titulo = "Listagem de Provas";
+}
+
+@model List<ListarProvaViewModel>
+
+<a class="btn btn-outline-primary rounded-pill px-4 mb-3" asp-action="Cadastrar">Gerar Nova</a>
+
+@if (TempData["MensagemErro"] is string mensagemErro)
+{
+    <div class="alert alert-danger border-start border-danger border-4 rounded-3" role="alert">@mensagemErro</div>
+}
+
+@if (Model.Count == 0)
+{
+    <div class="alert alert-primary border-start border-primary border-4 rounded-3" role="alert">
+        Nenhuma prova cadastrada.
+    </div>
+}
+else
+{
+    <div class="row row-cols-1 row-cols-md-2 g-2">
+        @foreach (ListarProvaViewModel prova in Model)
+        {
+            <div class="col">
+                <div class="card h-100">
+                    <div class="card-body d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                            <h5 class="card-title mb-0">@prova.Titulo</h5>
+                            <span class="badge text-bg-primary rounded-pill">@prova.Id.ToString().Substring(0, 8)</span>
+                        </div>
+                        <dl class="row g-2 mb-4">
+                            <dt class="col-sm-5 text-secondary fw-semibold">ID</dt>
+                            <dd class="col-sm-7 mb-0 text-break">@prova.Id</dd>
+                            <dt class="col-sm-5 text-secondary fw-semibold">Disciplina</dt>
+                            <dd class="col-sm-7 mb-0">@prova.NomeDisciplina</dd>
+                            <dt class="col-sm-5 text-secondary fw-semibold">Matéria</dt>
+                            <dd class="col-sm-7 mb-0">@(prova.ProvaRecuperacao ? "Prova de recuperação" : prova.NomeMateria)</dd>
+                            <dt class="col-sm-5 text-secondary fw-semibold">Questões</dt>
+                            <dd class="col-sm-7 mb-0">@prova.QuantidadeQuestoes</dd>
+                        </dl>
+                        <div class="d-flex flex-wrap gap-2 mt-auto justify-content-end">
+                            <a class="btn btn-outline-primary btn-sm rounded-pill px-3" asp-action="Detalhes" asp-route-id="@prova.Id">Detalhes</a>
+                            <a class="btn btn-outline-primary btn-sm rounded-pill px-3" asp-action="Duplicar" asp-route-id="@prova.Id">Duplicar</a>
+                            <a class="btn btn-outline-primary btn-sm rounded-pill px-3" asp-action="Pdf" asp-route-id="@prova.Id">PDF</a>
+                            <a class="btn btn-outline-primary btn-sm rounded-pill px-3" asp-action="Gabarito" asp-route-id="@prova.Id">Gabarito</a>
+                            <a class="btn btn-outline-primary btn-sm rounded-pill px-3" asp-action="Excluir" asp-route-id="@prova.Id">Excluir</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

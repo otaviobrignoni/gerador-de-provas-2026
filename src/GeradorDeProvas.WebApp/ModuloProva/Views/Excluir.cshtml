@@ -1,0 +1,23 @@
+@{
+    Layout = "_Layout";
+    ViewBag.Titulo = "Exclusão de Prova";
+}
+
+@model ExcluirProvaViewModel
+
+<form class="card border-primary-subtle shadow-sm mx-auto p-4" style="max-width: 780px;" asp-action="Excluir" method="post">
+    <input asp-for="Id" type="hidden">
+    <div class="alert alert-primary border-start border-primary border-4 rounded-3">Deseja realmente excluir esta prova?</div>
+    <dl class="row mb-0">
+        <dt class="col-sm-4 fw-semibold text-primary text-uppercase small">ID</dt>
+        <dd class="col-sm-8 text-break">@Model.Id</dd>
+        <dt class="col-sm-4 fw-semibold text-primary text-uppercase small">Título</dt>
+        <dd class="col-sm-8">@Model.Titulo</dd>
+        <dt class="col-sm-4 fw-semibold text-primary text-uppercase small">Disciplina</dt>
+        <dd class="col-sm-8">@Model.NomeDisciplina</dd>
+    </dl>
+    <div class="d-flex justify-content-end gap-2 mt-4">
+        <a class="btn btn-outline-primary rounded-pill px-4" asp-action="Listar">Voltar</a>
+        <button class="btn btn-primary rounded-pill px-4" type="submit">Confirmar</button>
+    </div>
+</form>
