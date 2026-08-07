@@ -29,6 +29,21 @@ public sealed class ProvaListarPage(IPage page, string urlBase)
         return await page.RunAndWaitForDownloadAsync(async () => await CardPorTitulo(titulo).GetByRole(AriaRole.Link, new() { Name = "Gabarito", Exact = true }).ClickAsync());
     }
 
+    public async Task VerDetalhesAsync(string titulo)
+    {
+        await CardPorTitulo(titulo).GetByRole(AriaRole.Link, new() { Name = "Detalhes", Exact = true }).ClickAsync();
+    }
+
+    public async Task DuplicarAsync(string titulo)
+    {
+        await CardPorTitulo(titulo).GetByRole(AriaRole.Link, new() { Name = "Duplicar", Exact = true }).ClickAsync();
+    }
+
+    public async Task ExcluirAsync(string titulo)
+    {
+        await CardPorTitulo(titulo).GetByRole(AriaRole.Link, new() { Name = "Excluir", Exact = true }).ClickAsync();
+    }
+
     private ILocator CardPorTitulo(string titulo)
     {
         return page.Locator(".card").Filter(new() { Has = TituloDaProva(titulo) });

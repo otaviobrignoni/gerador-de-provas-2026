@@ -3,24 +3,23 @@ using GeradorDeProvas.WebApp.Compartilhado.Identity;
 using GeradorDeProvas.WebApp.Compartilhado.Mapping;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 
 namespace GeradorDeProvas.WebApp.Compartilhado;
 
 public static class InjecaoDeDependencia
 {
-    public static void AddPresentationConfig(
-        this IServiceCollection services,
-        IConfiguration configuration
-    )
+    public static void AddPresentationConfig(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddControllersWithViews().AddRazorOptions(options =>
+        services.AddControllersWithViews(options =>
+        {
+            options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+        }).AddRazorOptions(options =>
         {
             // Reseta a configuração padrão do MVC
             options.ViewLocationFormats.Clear();
-
             // Localização das Views dos módulos: ModuloCaixa/Views/Listar.cshtml
             options.ViewLocationFormats.Add("/Modulo{1}/Views/{0}.cshtml");
-
             // Localização das Views compartilhadas: /Compartilhado/Views/_Layout.cshtml
             options.ViewLocationFormats.Add("/Compartilhado/Views/{0}.cshtml");
         });
@@ -36,12 +35,9 @@ public static class InjecaoDeDependencia
             cookieOptions.AccessDeniedPath = "/Autenticacao/Entrar";
         });
 
-        services.AddAuthorization(options =>
-        {
-            options.FallbackPolicy = new AuthorizationPolicyBuilder()
-                .RequireAuthenticatedUser()
-                .Build();
-        });
+        services.AddAuthorizationBuilder().SetFallbackPolicy(new AuthorizationPolicyBuilder()
+            .RequireAuthenticatedUser()
+            .Build());
 
         services.AddHttpContextAccessor();
         services.AddScoped<IProvedorDeUsuario, ProvedorDeUsuario>();
@@ -50,7 +46,8 @@ public static class InjecaoDeDependencia
         {
             AutoMapperOptions autoMapperOptions = configuration
                 .GetSection(AutoMapperOptions.SectionName)
-                .Get<AutoMapperOptions>() ?? new AutoMapperOptions();
+                .Get<AutoMapperOptions>()
+                ?? new AutoMapperOptions();
 
             string? licenseKey = autoMapperOptions.LicenseKey;
 

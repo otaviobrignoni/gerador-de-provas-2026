@@ -9,6 +9,7 @@ public sealed class QuestaoFormPage(IPage page, string urlBase)
     public ILocator Enunciado => page.GetByLabel("Enunciado");
     public ILocator Materia => page.GetByLabel("Matéria");
     public ILocator Alternativas => page.Locator("#alternativas .alternative-item");
+    public ILocator MensagemErro(string mensagem) => page.GetByText(mensagem, new() { Exact = true });
 
 
     public async Task IrParaCadastroAsync()
@@ -24,10 +25,16 @@ public sealed class QuestaoFormPage(IPage page, string urlBase)
         int contagemAlternativas = await Alternativas.CountAsync();
 
         while (contagemAlternativas < alternativas.Length)
+        {
             await page.GetByRole(AriaRole.Button, new() { Name = "Adicionar alternativa", Exact = true }).ClickAsync();
+            contagemAlternativas = await Alternativas.CountAsync();
+        }
 
         while (contagemAlternativas > alternativas.Length)
-            await page.GetByRole(AriaRole.Button, new() { Name = "Remover", Exact = true }).ClickAsync();
+        {
+            await page.GetByRole(AriaRole.Button, new() { Name = "Remover", Exact = true }).Last.ClickAsync();
+            contagemAlternativas = await Alternativas.CountAsync();
+        }
 
         for (int indice = 0; indice < alternativas.Length; indice++)
         {
@@ -44,5 +51,10 @@ public sealed class QuestaoFormPage(IPage page, string urlBase)
     public async Task ConfirmarAsync()
     {
         await page.GetByRole(AriaRole.Button, new() { Name = "Confirmar", Exact = true }).ClickAsync();
+    }
+
+    public async Task MarcarAlternativaCorretaAsync(int indice)
+    {
+        await page.Locator($"input[name='Alternativas[{indice}].Correta']").CheckAsync();
     }
 }

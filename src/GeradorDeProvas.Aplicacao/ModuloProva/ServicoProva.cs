@@ -92,6 +92,19 @@ public sealed class ServicoProva(IRepositorioProva repositorioProva, IRepositori
         return Result.Ok(idsOrdenados.Select(id => porId[id].ParaQuestaoDto()).ToList());
     }
 
+    public Result<List<QuestaoProvaDto>> SelecionarQuestoes(
+        CadastrarProvaDto dto,
+        IReadOnlyCollection<Guid> ids
+    )
+    {
+        Result<Prova> resultadoProva = PrepararProva(dto, ids);
+
+        if (resultadoProva.IsFailed)
+            return Result.Fail<List<QuestaoProvaDto>>(resultadoProva.Errors);
+
+        return Result.Ok(resultadoProva.Value.Questoes.ParaQuestoesDto());
+    }
+
     public List<OpcaoDisciplinaProvaDto> SelecionarDisciplinas()
     {
         return repositorioDisciplina.SelecionarTodos().ParaOpcoesDto();
@@ -176,10 +189,7 @@ public sealed class ServicoProva(IRepositorioProva repositorioProva, IRepositori
     {
         string tituloNormalizado = titulo.Normalizar();
 
-        return repositorioProva
-            .SelecionarTodos(p => (!idIgnorado.HasValue || p.Id != idIgnorado.Value)
-                && p.Titulo.Trim().ToLower() == tituloNormalizado)
-            .Any();
+        return repositorioProva.SelecionarTodos(p => (!idIgnorado.HasValue || p.Id != idIgnorado.Value) && p.Titulo.Trim().ToLower() == tituloNormalizado).Count != 0;
     }
 
     private Result<Materia?> SelecionarMateria(Guid disciplinaId, Guid? materiaId, bool recuperacao)

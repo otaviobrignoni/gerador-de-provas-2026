@@ -49,6 +49,61 @@ public sealed class QuestaoE2ETests : E2ETestsBase
     }
 
     [TestMethod]
+    [DataRow(3)]
+    [DataRow(4)]
+    public async Task DeveCadastrar_Questao_ComQuantidadeVariavel_DeAlternativas(int quantidadeAlternativas)
+    {
+        // Arrange
+        await RegistrarEEntrarAsync($"questao.{quantidadeAlternativas}.alternativas@teste.local", "Senha123!");
+        await CadastrarDisciplinaAsync("Matemática");
+        await CadastarMateriaAsync("Álgebra", "Matemática", 7);
+
+        string enunciado = $"Questão com {quantidadeAlternativas} alternativas";
+        string[] alternativas = [.. Enumerable.Range(1, quantidadeAlternativas).Select(numero => $"Alternativa {numero}")];
+        QuestaoFormPage formPage = new(Page, Url);
+        QuestaoListarPage listarPage = new(Page, Url);
+
+        await formPage.IrParaCadastroAsync();
+
+        // Act
+        await formPage.PreencherAsync(enunciado, "Álgebra", alternativas, indiceCorreta: quantidadeAlternativas - 1);
+
+        // Assert
+        await Expect(formPage.Alternativas).ToHaveCountAsync(quantidadeAlternativas);
+
+        await formPage.ConfirmarAsync();
+        await Expect(Page).ToHaveURLAsync(listarPage.Url);
+        await Expect(listarPage.EnunciadoDaQuestao(enunciado)).ToBeVisibleAsync();
+    }
+
+    [TestMethod]
+    [DataRow(false, "A questão deve possuir uma alternativa correta.")]
+    [DataRow(true, "A questão deve possuir apenas uma alternativa correta.")]
+    public async Task NaoDeveCadastrar_Questao_SemExatamenteUmaAlternativaCorreta(bool marcarDuasCorretas, string mensagemEsperada)
+    {
+        // Arrange
+        string sufixoEmail = marcarDuasCorretas ? "multiplas" : "nenhuma";
+        await RegistrarEEntrarAsync($"questao.{sufixoEmail}.correta@teste.local", "Senha123!");
+        await CadastrarDisciplinaAsync("Matemática");
+        await CadastarMateriaAsync("Álgebra", "Matemática", 7);
+
+        QuestaoFormPage formPage = new(Page, Url);
+        await formPage.IrParaCadastroAsync();
+        await formPage.PreencherAsync("Quanto é 2 + 2?", "Álgebra", ["4", "5"], indiceCorreta: marcarDuasCorretas ? 0 : -1);
+
+        if (marcarDuasCorretas)
+            await formPage.MarcarAlternativaCorretaAsync(1);
+
+        // Act
+        await formPage.ConfirmarAsync();
+
+        // Assert
+        await Expect(Page).ToHaveURLAsync(formPage.Url);
+        await Expect(formPage.MensagemErro(mensagemEsperada)).ToBeVisibleAsync();
+        await Expect(formPage.Enunciado).ToHaveValueAsync("Quanto é 2 + 2?");
+    }
+
+    [TestMethod]
     public async Task DeveEditar_Questao_ComDadosValidos()
     {
         // Arrange

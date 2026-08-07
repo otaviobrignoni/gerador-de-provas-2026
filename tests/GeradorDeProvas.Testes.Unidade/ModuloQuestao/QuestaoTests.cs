@@ -47,6 +47,43 @@ public sealed class QuestaoTests
     }
 
     [TestMethod]
+    public void Validar_ComEnunciadoNoLimite_NaoDeveRetornarErros()
+    {
+        // Arrange
+        var materia = new Materia("Álgebra", 8, new Disciplina("Matemática"));
+        var questao = new Questao(
+            new string('A', 2000),
+            materia,
+            [new Alternativa("Incorreta", false), new Alternativa("Correta", true)]
+        );
+
+        // Act
+        var erros = questao.Validar();
+
+        // Assert
+        Assert.IsEmpty(erros);
+    }
+
+    [TestMethod]
+    public void Validar_ComEnunciadoAcimaDoLimite_DeveRetornar_ErroCorrespondente()
+    {
+        // Arrange
+        var materia = new Materia("Álgebra", 8, new Disciplina("Matemática"));
+        var questao = new Questao(
+            new string('A', 2001),
+            materia,
+            [new Alternativa("Incorreta", false), new Alternativa("Correta", true)]
+        );
+
+        // Act
+        var erros = questao.Validar();
+
+        // Assert
+        Assert.HasCount(1, erros);
+        Assert.AreEqual("O campo \"Enunciado\" deve ser preenchido e conter no máximo 2000 caracteres.", erros.First());
+    }
+
+    [TestMethod]
     public void Validar_SemMateria_DeveRetornar_ErroCorrespondente()
     {
         // Arrange
@@ -124,6 +161,29 @@ public sealed class QuestaoTests
         // Assert
         Assert.HasCount(1, erros);
         Assert.AreEqual("A questão deve possuir no máximo quatro alternativas.", erros.First());
+    }
+
+    [TestMethod]
+    [DataRow(2)]
+    [DataRow(4)]
+    public void Validar_ComQuantidadeDeAlternativasNosLimites_NaoDeveRetornarErros(int quantidadeAlternativas)
+    {
+        // Arrange
+        var materia = new Materia("Álgebra", 8, new Disciplina("Matemática"));
+        List<Alternativa> alternativas = [new Alternativa("Correta", true)];
+
+        alternativas.AddRange(Enumerable
+            .Range(1, quantidadeAlternativas - 1)
+            .Select(indice => new Alternativa($"Incorreta {indice}", false))
+        );
+
+        var questao = new Questao("Quanto é 2 + 2?", materia, alternativas);
+
+        // Act
+        var erros = questao.Validar();
+
+        // Assert
+        Assert.IsEmpty(erros);
     }
 
     [TestMethod]

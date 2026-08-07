@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using GeradorDeProvas.Dominio.ModuloProva;
 
 namespace GeradorDeProvas.WebApp.ModuloProva;
 
@@ -30,7 +31,7 @@ public record CadastrarProvaEtapa2ViewModel(
     bool ProvaRecuperacao,
     Guid? MateriaId,
     [Required(ErrorMessage = "Informe a quantidade de questões.")]
-    [Range(1, int.MaxValue, ErrorMessage = "A quantidade de questões deve ser maior que zero.")]
+    [Range(1, Prova.QuantidadeMaximaQuestoes, ErrorMessage = "A quantidade de questões deve estar entre 1 e 60.")]
     int? QuantidadeQuestoes
 );
 

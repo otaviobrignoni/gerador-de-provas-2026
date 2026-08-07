@@ -9,6 +9,7 @@ public sealed class ProvaFormPage(IPage page, string urlBase)
     public ILocator Titulo => page.GetByLabel("Título");
     public ILocator Disciplina => page.GetByLabel("Disciplina");
     public ILocator Serie => page.GetByLabel("Série");
+    public ILocator ProvaRecuperacao => page.GetByLabel("Prova de recuperação (todas as matérias)");
 
     public async Task IrParaAsync()
     {
@@ -25,5 +26,10 @@ public sealed class ProvaFormPage(IPage page, string urlBase)
     public async Task ContinuarAsync()
     {
         await page.GetByRole(AriaRole.Button, new() { Name = "Continuar", Exact = true }).ClickAsync();
+    }
+
+    public async Task MarcarComoRecuperacaoAsync()
+    {
+        await ProvaRecuperacao.CheckAsync();
     }
 }

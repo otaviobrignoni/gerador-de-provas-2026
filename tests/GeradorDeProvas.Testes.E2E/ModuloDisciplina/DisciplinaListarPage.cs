@@ -13,6 +13,7 @@ public sealed class DisciplinaListarPage(IPage page, string urlBase)
     public ILocator EstadoVazio => page.GetByText("Nenhuma disciplina cadastrada.", new() { Exact = true });
 
     public ILocator NomeDaDisciplina(string nome) => page.GetByRole(AriaRole.Heading, new() { Name = nome, Exact = true });
+    public ILocator MensagemErro(string mensagem) => page.GetByRole(AriaRole.Alert).GetByText(mensagem, new() { Exact = true });
 
     public async Task IrParaAsync()
     {

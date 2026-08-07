@@ -8,6 +8,8 @@ namespace GeradorDeProvas.Dominio.ModuloProva;
 
 public sealed class Prova : EntidadeBase<Prova>, IEntidadeDoUsuario
 {
+    public const int QuantidadeMaximaQuestoes = 60;
+
     public string Titulo { get; set; } = string.Empty;
     public Disciplina Disciplina { get; set; } = null!;
     public Materia? Materia { get; set; }
@@ -55,6 +57,9 @@ public sealed class Prova : EntidadeBase<Prova>, IEntidadeDoUsuario
         if (QuantidadeQuestoes < 1)
             erros.Add("O campo \"Quantidade de Questões\" não pode ser zero ou negativo.");
 
+        else if (QuantidadeQuestoes > QuantidadeMaximaQuestoes)
+            erros.Add($"A prova deve possuir no máximo {QuantidadeMaximaQuestoes} questões.");
+
         if (!ProvaRecuperacao && Materia is not null && !Equals(Disciplina, Materia.Disciplina))
             erros.Add("O valor do campo \"Matéria\" deve pertencer à \"Disciplina\" selecionada.");
 
@@ -84,6 +89,9 @@ public sealed class Prova : EntidadeBase<Prova>, IEntidadeDoUsuario
 
         if (questoesDisponiveisDistintas.Count < QuantidadeQuestoes)
             erros.Add("A quantidade de questões informada é maior que a quantidade disponível.");
+
+        if (erros.Count > 0)
+            return erros;
 
         Random gerador = seed is not null ? new Random(seed.Value) : Random.Shared;
 

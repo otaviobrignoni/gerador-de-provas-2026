@@ -6,6 +6,7 @@
 @model CadastrarProvaEtapa2ViewModel
 
 <form class="card border-primary-subtle shadow-sm mx-auto p-4" style="max-width: 780px;" asp-action="SelecionarQuestoes" method="post">
+    <input name="fluxoId" type="hidden" value="@ViewBag.FluxoId">
     <input asp-for="Titulo" type="hidden">
     <input asp-for="NomeDisciplina" type="hidden">
     <input asp-for="Serie" type="hidden">
@@ -41,7 +42,7 @@
 
     <div class="mb-4">
         <label asp-for="QuantidadeQuestoes" class="form-label fw-semibold text-primary text-uppercase small">Quantidade de questões para sortear</label>
-        <input asp-for="QuantidadeQuestoes" class="form-control" type="number" min="1">
+        <input asp-for="QuantidadeQuestoes" class="form-control" type="number" min="1" max="60">
         <span asp-validation-for="QuantidadeQuestoes" class="text-danger small fw-semibold"></span>
     </div>
 

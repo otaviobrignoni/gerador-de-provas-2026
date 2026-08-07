@@ -17,7 +17,7 @@ namespace GeradorDeProvas.Infra.Compartilhado.Orm.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.9")
+                .HasAnnotation("ProductVersion", "10.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -374,9 +374,15 @@ namespace GeradorDeProvas.Infra.Compartilhado.Orm.Migrations
                     b.Property<Guid>("QuestoesId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("Ordem")
+                        .HasColumnType("int");
+
                     b.HasKey("ProvasId", "QuestoesId");
 
                     b.HasIndex("QuestoesId");
+
+                    b.HasIndex("ProvasId", "Ordem")
+                        .HasDatabaseName("IX_TBProvaQuestao_ProvasId_Ordem");
 
                     b.ToTable("TBProvaQuestao");
                 });

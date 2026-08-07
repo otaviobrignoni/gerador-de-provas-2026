@@ -14,6 +14,7 @@ public sealed class QuestaoListarPage(IPage page, string urlBase)
     public ILocator EstadoVazio => page.GetByText("Nenhuma questão cadastrada.", new() { Exact = true });
 
     public ILocator EnunciadoDaQuestao(string enunciado) => page.GetByRole(AriaRole.Heading, new() { Name = enunciado, Exact = true });
+    public ILocator MensagemErro(string mensagem) => page.GetByRole(AriaRole.Alert).GetByText(mensagem, new() { Exact = true });
 
 
     public async Task IrParaAsync()

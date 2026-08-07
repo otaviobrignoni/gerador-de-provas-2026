@@ -2,6 +2,7 @@ using FluentResults;
 using GeradorDeProvas.Aplicacao.ModuloDisciplina;
 using GeradorDeProvas.Dominio.ModuloDisciplina;
 using GeradorDeProvas.Dominio.ModuloMateria;
+using GeradorDeProvas.Dominio.ModuloProva;
 using GeradorDeProvas.Testes.Unidade.Compartilhado;
 using Moq;
 
@@ -47,6 +48,20 @@ public sealed class ServicoDisciplinaTests
         Assert.IsTrue(resultado.IsFailed);
         Assert.AreEqual(nameof(CadastrarDisciplinaDto.Nome), resultado.Errors.Single().Metadata["Campo"]);
         Assert.Contains("Já existe", resultado.Errors.Single().Message);
+        repositorioDisciplina.Verify(r => r.Cadastrar(It.IsAny<Disciplina>()), Times.Never);
+    }
+
+    [TestMethod]
+    public void Cadastrar_NomeInvalido_RetornaFalha()
+    {
+        var dto = CriarDtoCadastro(" ");
+        var (repositorioDisciplina, _, servicoDisciplina) = CriarServico();
+        repositorioDisciplina.ConfigurarSelecao();
+
+        Result resultado = servicoDisciplina.Cadastrar(dto);
+
+        Assert.IsTrue(resultado.IsFailed);
+        Assert.Contains("Nome", resultado.Errors.Single().Message);
         repositorioDisciplina.Verify(r => r.Cadastrar(It.IsAny<Disciplina>()), Times.Never);
     }
 
@@ -113,6 +128,20 @@ public sealed class ServicoDisciplinaTests
     }
 
     [TestMethod]
+    public void Editar_NomeInvalido_RetornaFalha()
+    {
+        var dto = CriarDtoEdicao(Guid.CreateVersion7(), "A");
+        var (repositorioDisciplina, _, servicoDisciplina) = CriarServico();
+        repositorioDisciplina.ConfigurarSelecao();
+
+        Result resultado = servicoDisciplina.Editar(dto);
+
+        Assert.IsTrue(resultado.IsFailed);
+        Assert.Contains("mínimo", resultado.Errors.Single().Message);
+        repositorioDisciplina.Verify(r => r.Editar(It.IsAny<Guid>(), It.IsAny<Disciplina>()), Times.Never);
+    }
+
+    [TestMethod]
     public void Excluir_DisciplinaSemVinculos_ExcluiDisciplina()
     {
         // Arrange
@@ -146,6 +175,91 @@ public sealed class ServicoDisciplinaTests
         Assert.IsTrue(resultado.IsFailed);
         Assert.Contains("matérias vinculadas", resultado.Errors.Single().Message);
         repositorioDisciplina.Verify(r => r.Excluir(disciplina.Id), Times.Never);
+    }
+
+    [TestMethod]
+    public void Excluir_DisciplinaVinculadaDiretamenteAProva_RetornaFalhaAmigavelAntesDeExcluir()
+    {
+        var disciplina = CriarDisciplina();
+        var materia = new Materia("Álgebra", 7, disciplina);
+        var prova = new Prova("Avaliação de Matemática", disciplina, materia, 7, 1, false);
+        Mock<IRepositorioDisciplina> repositorioDisciplina = new();
+        Mock<IRepositorioMateria> repositorioMateria = new();
+        Mock<IRepositorioProva> repositorioProva = new();
+        var servico = new ServicoDisciplina(
+            repositorioDisciplina.Object,
+            repositorioMateria.Object,
+            repositorioProva.Object
+        );
+        repositorioDisciplina.Setup(r => r.SelecionarPorId(disciplina.Id)).Returns(disciplina);
+        repositorioMateria.ConfigurarSelecao(materia);
+        repositorioProva.ConfigurarSelecao(prova);
+
+        Result resultado = servico.Excluir(disciplina.Id);
+
+        Assert.IsTrue(resultado.IsFailed);
+        Assert.AreEqual(
+            "Não é possível excluir esta disciplina, pois ela está vinculada a uma prova.",
+            resultado.Errors.Single().Message
+        );
+        repositorioDisciplina.Verify(r => r.Excluir(It.IsAny<Guid>()), Times.Never);
+    }
+
+    [TestMethod]
+    public void Excluir_DisciplinaInexistente_RetornaFalha()
+    {
+        Guid id = Guid.CreateVersion7();
+        var (repositorioDisciplina, _, servicoDisciplina) = CriarServico();
+        repositorioDisciplina.Setup(r => r.SelecionarPorId(id)).Returns((Disciplina?)null);
+
+        Result resultado = servicoDisciplina.Excluir(id);
+
+        Assert.IsTrue(resultado.IsFailed);
+        Assert.Contains("não encontrada", resultado.Errors.Single().Message);
+        repositorioDisciplina.Verify(r => r.Excluir(It.IsAny<Guid>()), Times.Never);
+    }
+
+    [TestMethod]
+    public void SelecionarTodos_DisciplinasExistentes_RetornaDtosMapeados()
+    {
+        var primeira = CriarDisciplina();
+        var segunda = CriarDisciplina("Física");
+        var (repositorioDisciplina, _, servicoDisciplina) = CriarServico();
+        repositorioDisciplina.ConfigurarSelecao(primeira, segunda);
+
+        List<ListarDisciplinaDto> resultado = servicoDisciplina.SelecionarTodos();
+
+        Assert.HasCount(2, resultado);
+        Assert.AreEqual(primeira.Id, resultado[0].Id);
+        Assert.AreEqual("Matemática", resultado[0].Nome);
+        Assert.AreEqual(segunda.Id, resultado[1].Id);
+    }
+
+    [TestMethod]
+    public void SelecionarPorId_DisciplinaExistente_RetornaDetalhesMapeados()
+    {
+        var disciplina = CriarDisciplina();
+        var (repositorioDisciplina, _, servicoDisciplina) = CriarServico();
+        repositorioDisciplina.Setup(r => r.SelecionarPorId(disciplina.Id)).Returns(disciplina);
+
+        Result<DetalhesDisciplinaDto> resultado = servicoDisciplina.SelecionarPorId(disciplina.Id);
+
+        Assert.IsTrue(resultado.IsSuccess);
+        Assert.AreEqual(disciplina.Id, resultado.Value.Id);
+        Assert.AreEqual(disciplina.Nome, resultado.Value.Nome);
+    }
+
+    [TestMethod]
+    public void SelecionarPorId_DisciplinaInexistente_RetornaFalha()
+    {
+        Guid id = Guid.CreateVersion7();
+        var (repositorioDisciplina, _, servicoDisciplina) = CriarServico();
+        repositorioDisciplina.Setup(r => r.SelecionarPorId(id)).Returns((Disciplina?)null);
+
+        Result<DetalhesDisciplinaDto> resultado = servicoDisciplina.SelecionarPorId(id);
+
+        Assert.IsTrue(resultado.IsFailed);
+        Assert.Contains("não encontrada", resultado.Errors.Single().Message);
     }
 
     private static Disciplina CriarDisciplina(string nome = "Matemática")

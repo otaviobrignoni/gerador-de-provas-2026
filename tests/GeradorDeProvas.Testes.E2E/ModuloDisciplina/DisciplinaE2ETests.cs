@@ -1,4 +1,5 @@
 using GeradorDeProvas.Testes.E2E.Compartilhado;
+using GeradorDeProvas.Testes.E2E.ModuloMateria;
 
 namespace GeradorDeProvas.Testes.E2E.ModuloDisciplina;
 
@@ -85,6 +86,41 @@ public sealed class DisciplinaE2ETests : E2ETestsBase
         await Expect(Page).ToHaveURLAsync(listarPage.Url);
         await Expect(listarPage.NomeDaDisciplina("Matemática")).Not.ToBeVisibleAsync();
         await Expect(listarPage.EstadoVazio).ToBeVisibleAsync();
+    }
+
+    [TestMethod]
+    public async Task NaoDeveCadastrar_DisciplinaDuplicada_NemExcluir_DisciplinaComMateria()
+    {
+        // Arrange
+        const string mensagemDuplicidade = "Já existe uma disciplina com este nome.";
+        const string mensagemVinculo = "Não é possível excluir esta disciplina, pois ela possui matérias vinculadas.";
+        await RegistrarEEntrarAsync("disciplina.restricoes@teste.local", "Senha123!");
+        await CadastrarDisciplinaAsync("Matemática");
+
+        DisciplinaFormPage formPage = new(Page, Url);
+        DisciplinaListarPage listarPage = new(Page, Url);
+        DisciplinaExcluirPage excluirPage = new(Page);
+
+        // Act e Assert - duplicidade normalizada
+        await formPage.IrParaCadastroAsync();
+        await formPage.PreencherNomeAsync("  matemática  ");
+        await formPage.ConfirmarAsync();
+        await Expect(Page).ToHaveURLAsync(formPage.UrlCadastrar);
+        await Expect(formPage.MensagemErro(mensagemDuplicidade)).ToBeVisibleAsync();
+
+        // Act e Assert - exclusão vinculada
+        MateriaFormPage materiaFormPage = new(Page, Url);
+        await materiaFormPage.IrParaCadastroAsync();
+        await materiaFormPage.PreencherAsync("Álgebra", "Matemática", 7);
+        await materiaFormPage.ConfirmarAsync();
+
+        await listarPage.IrParaAsync();
+        await listarPage.ExcluirAsync("Matemática");
+        await excluirPage.ConfirmarAsync();
+
+        await Expect(Page).ToHaveURLAsync(listarPage.Url);
+        await Expect(listarPage.MensagemErro(mensagemVinculo)).ToBeVisibleAsync();
+        await Expect(listarPage.NomeDaDisciplina("Matemática")).ToBeVisibleAsync();
     }
 
     private async Task CadastrarDisciplinaAsync(string nome)

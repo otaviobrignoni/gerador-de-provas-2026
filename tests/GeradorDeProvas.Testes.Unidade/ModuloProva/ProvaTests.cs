@@ -26,6 +26,41 @@ public sealed class ProvaTests
     }
 
     [TestMethod]
+    [DataRow(1)]
+    [DataRow(101)]
+    public void Validar_ComTituloForaDosLimites_DeveRetornar_ErroCorrespondente(int quantidadeCaracteres)
+    {
+        // Arrange
+        var disciplina = new Disciplina("Matemática");
+        var materia = new Materia("Álgebra", 8, disciplina);
+        var prova = new Prova(new string('A', quantidadeCaracteres), disciplina, materia, 8, 1, false);
+
+        // Act
+        var erros = prova.Validar();
+
+        // Assert
+        Assert.HasCount(1, erros);
+        Assert.AreEqual("O campo \"Título\" deve ser conter entre 2 e 100 caracteres.", erros.First());
+    }
+
+    [TestMethod]
+    [DataRow(2)]
+    [DataRow(100)]
+    public void Validar_ComTituloNosLimites_NaoDeveRetornarErros(int quantidadeCaracteres)
+    {
+        // Arrange
+        var disciplina = new Disciplina("Matemática");
+        var materia = new Materia("Álgebra", 8, disciplina);
+        var prova = new Prova(new string('A', quantidadeCaracteres), disciplina, materia, 8, 1, false);
+
+        // Act
+        var erros = prova.Validar();
+
+        // Assert
+        Assert.IsEmpty(erros);
+    }
+
+    [TestMethod]
     public void Validar_SemDisciplina_DeveRetornar_ErroCorrespondente()
     {
         // Arrange
@@ -49,6 +84,21 @@ public sealed class ProvaTests
         var materia = new Materia("Álgebra", 0, disciplina);
 
         var prova = new Prova("Prova de Álgebra", disciplina, materia, 0, 1, false);
+
+        // Act
+        var erros = prova.Validar();
+
+        // Assert
+        Assert.HasCount(1, erros);
+        Assert.AreEqual("O campo \"Série\" deve ser maior que zero.", erros.First());
+    }
+
+    [TestMethod]
+    public void Validar_ComSerieNegativa_DeveRetornar_ErroCorrespondente()
+    {
+        // Arrange
+        var disciplina = new Disciplina("Matemática");
+        var prova = new Prova("Recuperação de Matemática", disciplina, null, -1, 1, true);
 
         // Act
         var erros = prova.Validar();
@@ -139,6 +189,57 @@ public sealed class ProvaTests
     }
 
     [TestMethod]
+    public void Validar_ComQuantidadeQuestoesNegativa_DeveRetornar_ErroCorrespondente()
+    {
+        // Arrange
+        var disciplina = new Disciplina("Matemática");
+        var materia = new Materia("Álgebra", 8, disciplina);
+        var prova = new Prova("Prova de Álgebra", disciplina, materia, 8, -1, false);
+
+        // Act
+        var erros = prova.Validar();
+
+        // Assert
+        Assert.HasCount(1, erros);
+        Assert.AreEqual("O campo \"Quantidade de Questões\" não pode ser zero ou negativo.", erros.First());
+    }
+
+    [TestMethod]
+    public void Validar_QuantidadeAcimaDoLimitePraticoDoFluxo_RetornaErro()
+    {
+        var disciplina = new Disciplina("Matemática");
+        var materia = new Materia("Álgebra", 8, disciplina);
+        var prova = new Prova(
+            "Prova extensa",
+            disciplina,
+            materia,
+            8,
+            Prova.QuantidadeMaximaQuestoes + 1,
+            false
+        );
+
+        List<string> erros = prova.Validar();
+
+        Assert.HasCount(1, erros);
+        Assert.AreEqual("A prova deve possuir no máximo 60 questões.", erros.Single());
+    }
+
+    [TestMethod]
+    public void Validar_ProvaComumComDadosValidos_NaoDeveRetornarErros()
+    {
+        // Arrange
+        var disciplina = new Disciplina("Matemática");
+        var materia = new Materia("Álgebra", 8, disciplina);
+        var prova = new Prova("Prova de Álgebra", disciplina, materia, 8, 1, false);
+
+        // Act
+        var erros = prova.Validar();
+
+        // Assert
+        Assert.IsEmpty(erros);
+    }
+
+    [TestMethod]
     public void Validar_MateriaFora_DaDisciplina_DeveRetornar_ErroCorrespondente()
     {
         // Arrange
@@ -205,6 +306,26 @@ public sealed class ProvaTests
     }
 
     [TestMethod]
+    public void SortearQuestoes_ComQuestoesDuplicadas_DeveConsiderarApenasQuestoesDistintas()
+    {
+        // Arrange
+        var disciplina = new Disciplina("Matemática");
+        var materia = new Materia("Álgebra", 8, disciplina);
+        var prova = new Prova("Prova de Álgebra", disciplina, materia, 8, 2, false);
+        var primeiraQuestao = new Questao("Questão 1", materia, []);
+        var segundaQuestao = new Questao("Questão 2", materia, []);
+        List<Questao> questoesDisponiveis = [primeiraQuestao, primeiraQuestao, segundaQuestao];
+
+        // Act
+        var erros = prova.SortearQuestoes(questoesDisponiveis, 1);
+
+        // Assert
+        Assert.IsEmpty(erros);
+        Assert.HasCount(2, prova.Questoes);
+        Assert.HasCount(2, prova.Questoes.Select(q => q.Id).Distinct());
+    }
+
+    [TestMethod]
     public void SortearQuestoes_ComQuantidadeAbaixoDeUm_DeveRetornar_ErroCorrespondente()
     {
         // Arrange
@@ -218,6 +339,33 @@ public sealed class ProvaTests
         // Assert
         Assert.HasCount(1, erros);
         Assert.AreEqual("A quantidade de questões deve ser maior que zero.", erros.First());
+    }
+
+    [TestMethod]
+    [DataRow(0)]
+    [DataRow(-1)]
+    public void SortearQuestoes_ComQuantidadeInvalida_NaoDeveAlterarQuestoes(int quantidadeQuestoes)
+    {
+        // Arrange
+        var disciplina = new Disciplina("Matemática");
+        var materia = new Materia("Álgebra", 8, disciplina);
+        var questaoOriginal = new Questao("Questão original", materia, []);
+        var prova = new Prova(
+            "Prova de Álgebra",
+            disciplina,
+            materia,
+            8,
+            quantidadeQuestoes,
+            false,
+            [questaoOriginal]
+        );
+
+        // Act
+        _ = prova.SortearQuestoes([new Questao("Nova questão", materia, [])], 1);
+
+        // Assert
+        Assert.HasCount(1, prova.Questoes);
+        Assert.AreSame(questaoOriginal, prova.Questoes.Single());
     }
 
     [TestMethod]
@@ -239,5 +387,22 @@ public sealed class ProvaTests
         // Assert
         Assert.HasCount(1, erros);
         Assert.AreEqual("A quantidade de questões informada é maior que a quantidade disponível.", erros.First());
+    }
+
+    [TestMethod]
+    public void SortearQuestoes_ComQuantidadeMaiorQueDisponivel_NaoDeveAlterarQuestoes()
+    {
+        // Arrange
+        var disciplina = new Disciplina("Matemática");
+        var materia = new Materia("Álgebra", 8, disciplina);
+        var questaoOriginal = new Questao("Questão original", materia, []);
+        var prova = new Prova("Prova de Álgebra", disciplina, materia, 8, 2, false, [questaoOriginal]);
+
+        // Act
+        _ = prova.SortearQuestoes([new Questao("Nova questão", materia, [])], 1);
+
+        // Assert
+        Assert.HasCount(1, prova.Questoes);
+        Assert.AreSame(questaoOriginal, prova.Questoes.Single());
     }
 }

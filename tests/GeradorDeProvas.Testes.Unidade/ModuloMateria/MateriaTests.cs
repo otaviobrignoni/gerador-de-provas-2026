@@ -23,6 +23,39 @@ public sealed class MateriaTests
     }
 
     [TestMethod]
+    [DataRow(1)]
+    [DataRow(101)]
+    public void Validar_ComNomeForaDosLimites_DeveRetornar_ErroCorrespondente(int quantidadeCaracteres)
+    {
+        // Arrange
+        var disciplina = new Disciplina("Matemática");
+        var materia = new Materia(new string('A', quantidadeCaracteres), 5, disciplina);
+
+        // Act
+        var erros = materia.Validar();
+
+        // Assert
+        Assert.HasCount(1, erros);
+        Assert.AreEqual("O campo \"Nome\" deve conter entre 2 e 100 caracteres.", erros.First());
+    }
+
+    [TestMethod]
+    [DataRow(2)]
+    [DataRow(100)]
+    public void Validar_ComNomeNosLimites_NaoDeveRetornarErros(int quantidadeCaracteres)
+    {
+        // Arrange
+        var disciplina = new Disciplina("Matemática");
+        var materia = new Materia(new string('A', quantidadeCaracteres), 5, disciplina);
+
+        // Act
+        var erros = materia.Validar();
+
+        // Assert
+        Assert.IsEmpty(erros);
+    }
+
+    [TestMethod]
     public void Validar_SemSerie_DeveRetornar_ErroCorrespondente()
     {
         // Arrange
@@ -36,6 +69,35 @@ public sealed class MateriaTests
         // Assert
         Assert.HasCount(1, erros);
         Assert.AreEqual("O campo \"Série\" deve ser preenchido.", erros.First());
+    }
+
+    [TestMethod]
+    public void Validar_ComSerieNegativa_DeveRetornar_ErroCorrespondente()
+    {
+        // Arrange
+        var disciplina = new Disciplina("Matemática");
+        var materia = new Materia("Quatro Operações", -1, disciplina);
+
+        // Act
+        var erros = materia.Validar();
+
+        // Assert
+        Assert.HasCount(1, erros);
+        Assert.AreEqual("O campo \"Série\" deve ser preenchido.", erros.First());
+    }
+
+    [TestMethod]
+    public void Validar_ComDadosValidos_NaoDeveRetornarErros()
+    {
+        // Arrange
+        var disciplina = new Disciplina("Matemática");
+        var materia = new Materia("Quatro Operações", 1, disciplina);
+
+        // Act
+        var erros = materia.Validar();
+
+        // Assert
+        Assert.IsEmpty(erros);
     }
 
     [TestMethod]

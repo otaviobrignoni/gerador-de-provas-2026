@@ -51,6 +51,16 @@ public sealed class ProvaConfiguration : IEntityTypeConfiguration<Prova>
 
         builder.HasMany(p => p.Questoes)
             .WithMany(q => q.Provas)
-            .UsingEntity("TBProvaQuestao");
+            .UsingEntity<Dictionary<string, object>>(
+                "TBProvaQuestao",
+                associacao =>
+                {
+                    associacao.Property<int>("Ordem")
+                        .IsRequired();
+
+                    associacao.HasIndex("ProvasId", "Ordem")
+                        .HasDatabaseName("IX_TBProvaQuestao_ProvasId_Ordem");
+                }
+            );
     }
 }

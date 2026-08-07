@@ -10,6 +10,7 @@ public sealed class MateriaFormPage(IPage page, string urlBase)
     public ILocator Nome => page.GetByLabel("Nome");
     public ILocator Disciplina => page.GetByLabel("Disciplina");
     public ILocator Serie => page.GetByLabel("Série");
+    public ILocator MensagemErro(string mensagem) => page.GetByText(mensagem, new() { Exact = true });
 
     public async Task IrParaCadastroAsync()
     {

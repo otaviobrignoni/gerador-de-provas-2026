@@ -39,7 +39,8 @@ public partial class Program
 
             var dbContext = scope.ServiceProvider.GetRequiredService<GeradorDeProvasDbContext>();
 
-            dbContext.Database.Migrate();
+            if (dbContext.Database.IsRelational())
+                dbContext.Database.Migrate();
         }
 
         // Middlewares de roteamento
@@ -51,6 +52,7 @@ public partial class Program
 
         // Middleware de reconhecimento de rotas de controllers
         app.MapDefaultControllerRoute();
+        app.MapHealthChecks("/health").AllowAnonymous();
 
         // Execução do Servidor
         app.Run();

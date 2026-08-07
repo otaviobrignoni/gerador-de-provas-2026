@@ -6,6 +6,7 @@
 @model ConfirmarProvaViewModel
 
 <form class="card border-primary-subtle shadow-sm mx-auto p-4" style="max-width: 900px;" asp-action="Confirmar" method="post">
+    <input name="fluxoId" type="hidden" value="@ViewBag.FluxoId">
     <div asp-validation-summary="All" class="text-danger small fw-semibold mb-3"></div>
     <h5 class="text-primary mb-3">Confirmação</h5>
     <p class="text-secondary small">Confira os dados e as questões sorteadas antes de confirmar a geração.</p>
@@ -39,7 +40,7 @@
     }
 
     <div class="d-flex justify-content-between">
-        <a class="btn btn-outline-primary rounded-pill px-4" asp-action="SelecionarQuestoes">Voltar</a>
+        <a class="btn btn-outline-primary rounded-pill px-4" asp-action="SelecionarQuestoes" asp-route-fluxoId="@ViewBag.FluxoId">Voltar</a>
         <button class="btn btn-primary rounded-pill px-4" type="submit">Confirmar geração</button>
     </div>
 </form>

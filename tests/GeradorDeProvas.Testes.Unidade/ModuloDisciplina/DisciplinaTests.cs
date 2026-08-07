@@ -48,6 +48,21 @@ public sealed class DisciplinaTests
     }
 
     [TestMethod]
+    [DataRow(2)]
+    [DataRow(100)]
+    public void Validar_ComNomeNosLimites_NaoDeveRetornarErros(int quantidadeCaracteres)
+    {
+        // Arrange
+        var disciplina = new Disciplina(new string('A', quantidadeCaracteres));
+
+        // Act
+        var erros = disciplina.Validar();
+
+        // Assert
+        Assert.IsEmpty(erros);
+    }
+
+    [TestMethod]
     public void Atualizar_DeveAtualizar_Nome()
     {
         // Arrange

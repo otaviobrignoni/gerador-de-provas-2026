@@ -7,6 +7,8 @@ public sealed class DisciplinaFormPage(IPage page, string urlBase)
     public string UrlCadastrar => $"{urlBase}/Disciplina/Cadastrar";
     public string UrlEditar => $"{urlBase}/Disciplina/Editar";
 
+    public ILocator MensagemErro(string mensagem) => page.GetByText(mensagem, new() { Exact = true });
+
     public async Task IrParaCadastroAsync()
     {
         await page.GotoAsync(UrlCadastrar);

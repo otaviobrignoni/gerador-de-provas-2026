@@ -2,10 +2,15 @@ using FluentResults;
 using GeradorDeProvas.Aplicacao.Compartilhado;
 using GeradorDeProvas.Dominio.ModuloDisciplina;
 using GeradorDeProvas.Dominio.ModuloMateria;
+using GeradorDeProvas.Dominio.ModuloProva;
 
 namespace GeradorDeProvas.Aplicacao.ModuloDisciplina;
 
-public class ServicoDisciplina(IRepositorioDisciplina repositorioDisciplina, IRepositorioMateria repositorioMateria) : ServicoBase<Disciplina>
+public class ServicoDisciplina(
+    IRepositorioDisciplina repositorioDisciplina,
+    IRepositorioMateria repositorioMateria,
+    IRepositorioProva? repositorioProva = null
+) : ServicoBase<Disciplina>
 {
     public Result Cadastrar(CadastrarDisciplinaDto dto)
     {
@@ -49,6 +54,9 @@ public class ServicoDisciplina(IRepositorioDisciplina repositorioDisciplina, IRe
         if (disciplina == null)
             return Falha(string.Empty, "Disciplina não encontrada.");
 
+        if (PossuiProvasVinculadas(id))
+            return Falha(string.Empty, "Não é possível excluir esta disciplina, pois ela está vinculada a uma prova.");
+
         if (PossuiMateriasVinculadas(id))
             return Falha(string.Empty, "Não é possível excluir esta disciplina, pois ela possui matérias vinculadas.");
 
@@ -81,4 +89,8 @@ public class ServicoDisciplina(IRepositorioDisciplina repositorioDisciplina, IRe
 
     private bool PossuiMateriasVinculadas(Guid disciplinaId) =>
         repositorioMateria.SelecionarTodos(m => m.Disciplina.Id == disciplinaId).Count != 0;
+
+    private bool PossuiProvasVinculadas(Guid disciplinaId) =>
+        repositorioProva is not null
+        && repositorioProva.SelecionarTodos(p => p.Disciplina.Id == disciplinaId).Count != 0;
 }

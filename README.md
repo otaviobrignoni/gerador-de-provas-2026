@@ -229,6 +229,43 @@ O arquivo PDF do gabarito deve apresentar:
 
 - [.NET 10.0 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 
+## Testes
+
+Os testes da categoria `Database` exigem uma instância SQL Server disponível e uma conta
+com permissão para criar e excluir bancos. A connection string local deve ser armazenada no
+User Secrets do projeto de integração, nunca em um arquivo versionado. O comando abaixo lê
+o valor sem exibi-lo no terminal e não presume servidor, porta ou forma de autenticação:
+
+```bash
+read -rsp "Connection string do SQL Server de testes: " SQLSERVER_TEST_CONNECTION
+dotnet user-secrets set "ConnectionStrings:SqlServerTests" "$SQLSERVER_TEST_CONNECTION" --project tests/GeradorDeProvas.Testes.Integracao/GeradorDeProvas.Testes.Integracao.csproj
+unset SQLSERVER_TEST_CONNECTION
+
+dotnet test tests/GeradorDeProvas.Testes.Integracao/GeradorDeProvas.Testes.Integracao.csproj --filter "TestCategory=Database"
+```
+
+Em CI, configure o mesmo valor em `ConnectionStrings__SqlServerTests`, que tem precedência
+sobre o User Secrets.
+
+A fixture verifica a disponibilidade do servidor, cria um banco exclusivo para cada teste,
+aplica todas as migrações e remove o banco no cleanup. A instância pode estar instalada
+diretamente no computador ou ser disponibilizada por um container já iniciado; os testes
+não acessam a API do Docker.
+
+Execute toda a suíte, incluindo os testes E2E com Chromium headless:
+
+```bash
+dotnet test GeradorDeProvas.slnx --settings tests/GeradorDeProvas.Testes.E2E/playwright.runsettings
+```
+
+Gere o relatório de cobertura no formato Cobertura:
+
+```bash
+dotnet test GeradorDeProvas.slnx --settings tests/coverage.runsettings --collect:"XPlat Code Coverage"
+```
+
+Os relatórios são gravados nos diretórios `TestResults` dos projetos de teste.
+
 ## Licenças de fontes
 
 Este projeto distribui a fonte JetBrains Mono para geração de PDFs.

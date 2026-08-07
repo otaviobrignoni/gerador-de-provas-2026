@@ -9,6 +9,8 @@ public sealed class EntrarPage(IPage page, string urlBase)
     public ILocator Titulo => page.GetByRole(AriaRole.Heading, new() { Name = "Entrar", Exact = true });
     public ILocator Email => page.GetByLabel("E-mail");
     public ILocator Senha => page.GetByLabel("Senha", new() { Exact = true });
+    public ILocator MensagemCredenciaisInvalidas => page.GetByText("E-mail ou senha inválidos.", new() { Exact = true });
+    public ILocator MensagemContaBloqueada => page.GetByText("Conta bloqueada temporariamente. Tente novamente mais tarde.", new() { Exact = true });
 
     public ILocator UsuarioAutenticado(string email) => page.GetByRole(AriaRole.Button, new() { Name = email, Exact = true });
 
@@ -27,4 +29,5 @@ public sealed class EntrarPage(IPage page, string urlBase)
     {
         await page.GetByRole(AriaRole.Button, new() { Name = "Entrar", Exact = true }).ClickAsync();
     }
+
 }

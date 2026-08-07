@@ -10,28 +10,23 @@ public static class SerilogFactory
 {
     public static Logger Create(IConfiguration configuration, IHostEnvironment env)
     {
-        string caminhoAppData = Environment
-            .GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-
-        string caminhoDiretorio = Path.Combine(caminhoAppData, "GeradorDeProvas");
-
-        Directory.CreateDirectory(caminhoDiretorio);
-
-        string caminhoLogs = Path.Combine(caminhoDiretorio, "erro.log");
-
         LoggerConfiguration loggerConfiguration = new LoggerConfiguration()
             .MinimumLevel.Information()
             .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
             .Enrich.FromLogContext()
-            .WriteTo.Console()
-            .WriteTo.File(
-                caminhoLogs,
-                rollingInterval: RollingInterval.Day,
-                restrictedToMinimumLevel: LogEventLevel.Error
-            );
+            .WriteTo.Console();
+
         if (!env.IsEnvironment("Testing"))
         {
+            string caminhoAppData = Environment
+                .GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+
+            string caminhoDiretorio = configuration["Infra:Serilog:Directory"]
+                ?? Path.Combine(caminhoAppData, "GeradorDeProvas");
+
             Directory.CreateDirectory(caminhoDiretorio);
+
+            string caminhoLogs = Path.Combine(caminhoDiretorio, "erro.log");
 
             loggerConfiguration.WriteTo.File(
                 caminhoLogs,

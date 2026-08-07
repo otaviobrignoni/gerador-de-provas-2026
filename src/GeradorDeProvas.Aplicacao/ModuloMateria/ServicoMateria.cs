@@ -2,11 +2,17 @@ using FluentResults;
 using GeradorDeProvas.Aplicacao.Compartilhado;
 using GeradorDeProvas.Dominio.ModuloDisciplina;
 using GeradorDeProvas.Dominio.ModuloMateria;
+using GeradorDeProvas.Dominio.ModuloProva;
 using GeradorDeProvas.Dominio.ModuloQuestao;
 
 namespace GeradorDeProvas.Aplicacao.ModuloMateria;
 
-public class ServicoMateria(IRepositorioMateria repositorioMateria, IRepositorioDisciplina repositorioDisciplina, IRepositorioQuestao repositorioQuestao) : ServicoBase<Materia>
+public class ServicoMateria(
+    IRepositorioMateria repositorioMateria,
+    IRepositorioDisciplina repositorioDisciplina,
+    IRepositorioQuestao repositorioQuestao,
+    IRepositorioProva? repositorioProva = null
+) : ServicoBase<Materia>
 {
     public Result Cadastrar(CadastrarMateriaDto dto)
     {
@@ -62,6 +68,9 @@ public class ServicoMateria(IRepositorioMateria repositorioMateria, IRepositorio
         if (materia == null)
             return Falha(string.Empty, "Matéria não encontrada.");
 
+        if (PossuiProvasVinculadas(id))
+            return Falha(string.Empty, "Não é possível excluir esta matéria, pois ela está vinculada a uma prova.");
+
         if (PossuiQuestoesVinculadas(id))
             return Falha(string.Empty, "Não é possível excluir esta matéria, pois ela possui questões vinculadas.");
 
@@ -104,16 +113,19 @@ public class ServicoMateria(IRepositorioMateria repositorioMateria, IRepositorio
     {
         string nomeNormalizado = nome.Normalizar();
 
-        return repositorioMateria
-            .SelecionarTodos(m => (!idIgnorado.HasValue || m.Id != idIgnorado.Value)
-                && m.Nome.Trim().ToLower() == nomeNormalizado)
-            .Any();
+        return repositorioMateria.SelecionarTodos(m => (!idIgnorado.HasValue || m.Id != idIgnorado.Value) && m.Nome.Trim().ToLower() == nomeNormalizado).Count != 0;
     }
 
     private bool PossuiQuestoesVinculadas(Guid materiaId)
     {
-        return repositorioQuestao
-            .SelecionarTodos(q => q.Materia.Id == materiaId)
-            .Any();
+        return repositorioQuestao.SelecionarTodos(q => q.Materia.Id == materiaId).Count != 0;
+    }
+
+    private bool PossuiProvasVinculadas(Guid materiaId)
+    {
+        if (repositorioProva is null)
+            return false;
+
+        return repositorioProva.SelecionarTodos(p => p.Materia != null && p.Materia.Id == materiaId).Count != 0;
     }
 }

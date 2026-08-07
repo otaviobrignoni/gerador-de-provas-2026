@@ -29,6 +29,37 @@ public sealed class AlternativaTests
     }
 
     [TestMethod]
+    public void Validar_ComTextoNoLimite_NaoDeveRetornarErros()
+    {
+        // Arrange
+        var materia = new Materia("Álgebra", 8, new Disciplina("Matemática"));
+        var alternativa = new Alternativa(new string('A', 1000), true);
+        _ = new Questao("Enunciado", materia, [alternativa, new Alternativa("Outra", false)]);
+
+        // Act
+        var erros = alternativa.Validar();
+
+        // Assert
+        Assert.IsEmpty(erros);
+    }
+
+    [TestMethod]
+    public void Validar_ComTextoAcimaDoLimite_DeveRetornar_ErroCorrespondente()
+    {
+        // Arrange
+        var materia = new Materia("Álgebra", 8, new Disciplina("Matemática"));
+        var alternativa = new Alternativa(new string('A', 1001), true);
+        _ = new Questao("Enunciado", materia, [alternativa, new Alternativa("Outra", false)]);
+
+        // Act
+        var erros = alternativa.Validar();
+
+        // Assert
+        Assert.HasCount(1, erros);
+        Assert.AreEqual("O campo \"Texto\" da alternativa deve ser preenchido e conter no máximo 1000 caracteres.", erros.First());
+    }
+
+    [TestMethod]
     public void Validar_SemQuestao_DeveRetornar_ErroCorrespondente()
     {
         // Arrange
