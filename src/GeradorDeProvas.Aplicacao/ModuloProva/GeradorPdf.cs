@@ -12,12 +12,12 @@ public static class GeradorPdf
 
     private static readonly Lazy<bool> fontesInicializadas = new(RegistrarFontes, true);
 
-    public static byte[] GerarPdf(this DetalhesProvaDto prova, bool incluirGabarito)
+    public static byte[] Gerar(this DetalhesProvaDto prova, bool incluirGabarito)
     {
         return CriarDocumento(prova, incluirGabarito).GeneratePdf();
     }
 
-    public static void GerarPdfEMostrar(this DetalhesProvaDto prova, bool incluirGabarito)
+    public static void GerarEMostrar(this DetalhesProvaDto prova, bool incluirGabarito)
     {
         CriarDocumento(prova, incluirGabarito).GeneratePdfAndShow();
     }

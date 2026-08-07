@@ -22,7 +22,7 @@ public sealed class GeradorPdfTests
         var prova = CriarProva();
 
         // Act
-        byte[] pdf = prova.GerarPdf(false);
+        byte[] pdf = prova.Gerar(false);
 
         (int quantidadePaginas, string texto) = LerDocumento(pdf);
 
@@ -43,8 +43,8 @@ public sealed class GeradorPdfTests
         var prova = CriarProva();
 
         // Act
-        byte[] pdfProva = prova.GerarPdf(false);
-        byte[] pdfGabarito = prova.GerarPdf(true);
+        byte[] pdfProva = prova.Gerar(false);
+        byte[] pdfGabarito = prova.Gerar(true);
 
         string textoProva = LerTexto(pdfProva);
         string textoGabarito = LerTexto(pdfGabarito);
@@ -63,7 +63,7 @@ public sealed class GeradorPdfTests
         var prova = CriarProva(quantidadeQuestoes: 60, true);
 
         // Act
-        byte[] pdf = prova.GerarPdf(true);
+        byte[] pdf = prova.Gerar(true);
 
         (int quantidadePaginas, string texto) = LerDocumento(pdf);
 
